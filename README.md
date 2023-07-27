@@ -10,10 +10,10 @@ If you encounter any difficulties during installation or usage of these programs
 
 To be able to use the software provided in this repository, you will need to have a working Python3 distribution installed on your computer.  
 
-To use magnetstein, clone [masserstein repository](https://github.com/mciach/masserstein). In the commandline, this can be done by typing:
+To use magnetstein, clone this repository. In the commandline, this can be done by typing:
 
 ```
-git clone https://github.com/mciach/wassersteinms.git
+git clone https://github.com/BDomzal/magnetstein.git
 ```
 
 The above command will create a folder `wassersteinms` in your current working directory. Go to this directory by typing
@@ -28,12 +28,7 @@ in the commandline. Then, install the package by running the `setup.py` file:
 python3 setup.py install --user
 ```
 
-This will install the `masserstein` package for the current user.  
-To switch from masserstein (mass spectrometry tool) to magnetstein (NMR spectroscopy tool) run:
-
-```
-git checkout magnetstein
-```
+This will install the `masserstein` package for the current user (including NMR spectroscopy tool Magnetstein).  
 
 You will also need to have the following packages installed (all availiable via pip):
 
