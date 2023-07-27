@@ -10,7 +10,7 @@ If you encounter any difficulties during installation or usage of these programs
 
 To be able to use the software provided in this repository, you will need to have a working Python3 distribution installed on your computer.  
 
-To use magnetstein, clone this repository. In the commandline, this can be done by typing:
+To use magnetstein, clone [masserstein repository](https://github.com/mciach/masserstein). In the commandline, this can be done by typing:
 
 ```
 git clone https://github.com/mciach/wassersteinms.git
