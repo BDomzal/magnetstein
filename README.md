@@ -2,7 +2,7 @@
 
 This repository contains software tools which allow to compare nuclear magnetic resonance (NMR) spectra and estimate proportions of components in mixture using the Wasserstein distance. 
 
-Magnetstein is a modification of the algorithm from a Python3 package called `masserstein` (available in this repository on branch master). 
+Magnetstein is a modification of the algorithm from a Python3 package called `masserstein` (available [here](https://github.com/mciach/masserstein)). 
 
 If you encounter any difficulties during installation or usage of these programs, or if you have any suggestions regarding their functionality, please post a GitHub issue or send an email to b.domzal@mimuw.edu.pl. 
 
