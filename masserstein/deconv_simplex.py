@@ -560,7 +560,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
 
 def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                         MMD=-1, max_reruns=3, verbose=False, 
-                        progress=True, MTD_th=0.22, solver=LpSolverDefault,
+                        progress=True, MTD_th=0.22, solver=pulp.GUROBI(msg=False),
                         what_to_compare='concentration'):
     """
     Returns estimated proportions of molecules from query in spectrum.
@@ -597,9 +597,10 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         Ion current from theoretical spectra will be transported up to this distance 
         when estimating molecule proportions. Default is None.
     solver: 
-        Which solver should be used. In case of problems with the default solver,
-        pulp.GUROBI() is recommended (note that it requires obtaining a licence).
-        To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True).
+        Which solver should be used. We recommend using pulp.GUROBI() (note that it requires obtaining a licence).
+        To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True). 
+        If you prefer to use Magnetstein without Gurobi set this argument to solver=LpSolverDefault.
+        Note that using Magnetstein without Gurobi can result in long computation time and, in some cases, incorrect results.
     what_to_compare:
         Should the resulting proportions correspond to concentrations or area under the curve? Default is
         'concentration'. Alternatively can be set to 'area'. This argument is used only for NMR spectra.

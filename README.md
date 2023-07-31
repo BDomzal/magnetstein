@@ -45,7 +45,7 @@ pip install PuLP
 
 in the commandline.)
 
-If you are a researcher, we strongly recommend using Gurobi (available for academics at no cost) as your solver in magnetstein. For more information on license and installation, see [Gurobi website](https://www.gurobi.com/). To use magnetstein with Gurobi, set solver=pulp.GUROBI() in estimate_proportions function.
+If you are a researcher, we strongly recommend using Gurobi (available for academics at no cost) as your solver in Magnetstein. For more information on license and installation, see [Gurobi website](https://www.gurobi.com/). Gurobi is a default solver. If you prefer to use magnetstein without Gurobi, set solver=LpSolverDefault in estimate_proportions function. Note that using Magnetstein without Gurobi can result in long computation time and, in some cases, incorrect results.
 
 # Examples
 
