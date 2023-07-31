@@ -16,10 +16,10 @@ To use magnetstein, clone this repository. In the commandline, this can be done 
 git clone https://github.com/BDomzal/magnetstein.git
 ```
 
-The above command will create a folder `wassersteinms` in your current working directory. Go to this directory by typing
+The above command will create a folder `magnetstein` in your current working directory. Go to this directory by typing
 
 ```
-cd wassersteinms/
+cd magnetstein/
 ```
 
 in the commandline. Then, install the package by running the `setup.py` file:
