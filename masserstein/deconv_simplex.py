@@ -49,8 +49,8 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
                 Denoising penalty.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
-                pulp.GUROBI() is recommended (note that it requires obtaining a licence).
-                To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True).
+                lp.GUROBI() is recommended (note that it requires obtaining a licence).
+                To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -163,8 +163,8 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
                 Denoising penalty.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
-                pulp.GUROBI() is recommended (note that it requires obtaining a licence).
-                To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True).
+                lp.GUROBI() is recommended (note that it requires obtaining a licence).
+                To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -281,8 +281,8 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 Denoising penalty for the theoretical (reference) spectra.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
-                pulp.GUROBI() is recommended (note that it requires obtaining a licence).
-                To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True).
+                lp.GUROBI() is recommended (note that it requires obtaining a licence).
+                To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -431,8 +431,8 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 Denoising penalty for the theoretical (reference) spectra.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
-                pulp.GUROBI() is recommended (note that it requires obtaining a licence).
-                To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True).
+                lp.GUROBI() is recommended (note that it requires obtaining a licence).
+                To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
         
         _____
         Returns: dict
@@ -560,7 +560,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
 
 def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                         MMD=-1, max_reruns=3, verbose=False, 
-                        progress=True, MTD_th=0.22, solver=pulp.GUROBI(msg=False),
+                        progress=True, MTD_th=0.22, solver=lp.GUROBI(msg=False),
                         what_to_compare='concentration'):
     """
     Returns estimated proportions of molecules from query in spectrum.
@@ -597,8 +597,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         Ion current from theoretical spectra will be transported up to this distance 
         when estimating molecule proportions. Default is None.
     solver: 
-        Which solver should be used. We recommend using pulp.GUROBI() (note that it requires obtaining a licence).
-        To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True). 
+        Which solver should be used. We recommend using lp.GUROBI() (note that it requires obtaining a licence).
+        To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True). 
         If you prefer to use Magnetstein without Gurobi set this argument to solver=LpSolverDefault.
         Note that using Magnetstein without Gurobi can result in long computation time and, in some cases, incorrect results.
     what_to_compare:
