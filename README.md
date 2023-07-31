@@ -10,7 +10,7 @@ If you encounter any difficulties during installation or usage of these programs
 
 To be able to use the software provided in this repository, you will need to have a working Python3 distribution installed on your computer.  
 
-To use magnetstein, clone this repository. In the commandline, this can be done by typing:
+To use Magnetstein, clone this repository. In the commandline, this can be done by typing:
 
 ```
 git clone https://github.com/BDomzal/magnetstein.git
@@ -45,7 +45,7 @@ pip install PuLP
 
 in the commandline.)
 
-If you are a researcher, we strongly recommend using Gurobi (available for academics at no cost) as your solver in Magnetstein. For more information on license and installation, see [Gurobi website](https://www.gurobi.com/). Gurobi is a default solver. If you prefer to use magnetstein without Gurobi, set solver=LpSolverDefault in estimate_proportions function. Note that using Magnetstein without Gurobi can result in long computation time and, in some cases, incorrect results.
+If you are a researcher, we strongly recommend using Gurobi (available for academics at no cost) as your solver in Magnetstein. For more information on license and installation, see [Gurobi website](https://www.gurobi.com/). Gurobi is a default solver. If you prefer to use Magnetstein without Gurobi, set solver=LpSolverDefault in estimate_proportions function. Note that using Magnetstein without Gurobi can result in long computation time and, in some cases, incorrect results.
 
 # Examples
 
@@ -57,5 +57,5 @@ Powered by [© Gurobi.](https://www.gurobi.com/)
 
 # Citing 
 
-Article about magnetstein is in preparation. If you use tools from this package, please include link to this repository in citation.
+Article about Magnetstein is in preparation. If you use tools from this package, please include link to this repository in citation.
 
