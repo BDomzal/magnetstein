@@ -14,7 +14,7 @@ from masserstein import misc
 def intensity_generator(confs, mzaxis):
         """
         Generates intensities from spectrum represented as a confs list,
-        over m/z values from mzaxis.
+        over ppm (or m/z) values from mzaxis.
         Assumes mzaxis and confs are sorted and returns consecutive intensities.
         """
         mzaxis_id = 0
@@ -441,10 +441,10 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             - noise_in_theoretical: Proportion of noise present in the combination of components' spectra.
             - trash: Amount of noise in the consecutive ppm (or m/z) points of the mixture's spectrum.
             - theoretical_trash: Amount of noise present in the combination of components'
-            spectra in consecutive m/z points from common horizontal axis.
+            spectra in consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
-            - common horizontal axis: All the m/z values from the mixture's spectrum and from the components' spectra in a sorted list. 
+            - common horizontal axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' spectra in a sorted list. 
         """
 
         start = time()
