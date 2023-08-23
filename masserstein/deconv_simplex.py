@@ -626,14 +626,16 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             return tqdm(x, **kwargs)
         else:
             return x
+
     try:
         exp_confs = spectrum.confs
     except:
         print("Could not retrieve the confs list. Is the supplied spectrum an object of class Spectrum?")
         raise
-    assert abs(sum(x[1] for x in exp_confs) - 1.) < 1e-08, "The mixture's spectrum is not normalized."
+
     
     assert what_to_compare=='concentration' or what_to_compare=='area', 'Comparison of %s is not supported' %what_to_compare
+
     is_NMR_spectrum = [isinstance(sp, NMRSpectrum) for sp in [spectrum] + query]
     assert all(is_NMR_spectrum) or not any(is_NMR_spectrum), 'Spectra provided are of mixed types. \
             Please assert that either all or none of the spectra are NMR spectra.'
@@ -641,11 +643,18 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
 
     if not nmr:
         assert all(x[0] >= 0. for x in exp_confs), 'Found peaks with negative masses!'
+
     if any(x[1] < 0 for x in exp_confs):
-        raise ValueError("""
-        The mixture's spectrum cannot contain negative intensities. 
-        Please remove them using e.g. the Spectrum.trim_negative_intensities() method.
-        """)
+        print("The mixture's spectrum cannot contain negative intensities. ")
+        print("Setting negative intensities to zero.")
+        spectrum.trim_negative_intensities()
+
+    if not abs(sum(x[1] for x in exp_confs) - 1.) < 1e-08:
+        print("The mixture's spectrum is not normalized.")
+        print("Normalizing mixture's spectrum.")
+        spectrum.normalize()
+
+    exp_confs = spectrum.confs
                            
     vortex = [0.]*len(exp_confs)  # unexplained signal
     k = len(query)
@@ -657,7 +666,17 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         MTD_max = max(MTD, MTD_th)
 
     for i, q in enumerate(query):
-        assert abs(sum(x[1] for x in q.confs) - 1.) < 1e-08, 'Reference spectrum %i is not normalized' %i
+
+        if any(x[1] < 0 for x in q.confs):
+            print("Reference spectrum %i cannot contain negative intensities." %i)
+            print("Setting negative intensities to zero.")
+            q.trim_negative_intensities()
+
+        if abs(sum(x[1] for x in q.confs) - 1.) < 1e-08:
+            print('Reference spectrum %i is not normalized' %i)
+            print("Normalizing reference spectrum %i." %i)
+            q.normalize()
+
         if not nmr:
             assert all(x[0] >= 0 for x in q.confs), 'Reference spectrum %i has negative masses!' %i
         
