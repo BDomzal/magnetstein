@@ -288,9 +288,9 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             Dictionary with the following entries:
             - probs: List containing proportions of consecutive components' spectra in the mixture's
             spectrum. Note that they do not have to sum up to 1, because some part of the signal can be noise.
-            - noise_in_theoretical: Proportion of noise present in the combination of components' spectra.
+            - noise_in_components: Proportion of noise present in the combination of components' spectra.
             - trash: Amount of noise in the consecutive ppm (or m/z) points of the mixture's spectrum.
-            - theoretical_trash: Amount of noise present in the combination of components'
+            - components_trash: Amount of noise present in the combination of components'
             spectra in consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
@@ -404,7 +404,7 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 Please check the deconvolution results and consider reporting this warning to the authors.
                                     """ % (sum(probs)+sum(abyss)))
 
-        return {"probs": probs, "noise_in_theoretical": p0_prime, "trash": abyss, "theoretical_trash": abyss_th,
+        return {"probs": probs, "noise_in_components": p0_prime, "trash": abyss, "components_trash": abyss_th,
          "fun": lp.value(program.objective), 'status': program.status, 'common_horizontal_axis': common_horizontal_axis}
 
 
@@ -438,9 +438,9 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             Dictionary with the following entries:
             - probs: List containing proportions of consecutive components' spectra in the mixture's
             spectrum. Note that they do not have to sum up to 1, because some part of the signal can be noise.
-            - noise_in_theoretical: Proportion of noise present in the combination of components' spectra.
+            - noise_in_components: Proportion of noise present in the combination of components' spectra.
             - trash: Amount of noise in the consecutive ppm (or m/z) points of the mixture's spectrum.
-            - theoretical_trash: Amount of noise present in the combination of components'
+            - components_trash: Amount of noise present in the combination of components'
             spectra in consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
@@ -551,7 +551,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 Please check the deconvolution results and consider reporting this warning to the authors.
                                     """ % (sum(probs)+sum(abyss)))
 
-        return {"probs": probs, "noise_in_theoretical": p0_prime, "trash": abyss, "theoretical_trash": abyss_th, 
+        return {"probs": probs, "noise_in_components": p0_prime, "trash": abyss, "components_trash": abyss_th, 
         "fun": lp.value(program.objective)+penalty, 'status': program.status, 'common_horizontal_axis': common_horizontal_axis}
 
 
@@ -611,10 +611,10 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         The intensities correspond to the ppm (or m/z) values of the mixture's spectrum.
         If MTD_th parameter is not equal to None, then the dictionary contains also 
         the following entries:
-        - noise_in_theoretical: List of intensities from components' spectra
+        - noise_in_components: List of intensities from components' spectra
         that do not correspond to any intensities in the mixture's spectrum and therefore were 
         identified as noise. The intensities correspond to the ppm (or m/z) values from common horizontal axis.
-        - proportion_of_noise_in_theoretical: Proportion of noise present in the combination of components'
+        - proportion_of_noise_in_components: Proportion of noise present in the combination of components'
         spectra.
         - common_horizontal_axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' 
         spectra in a sorted list. 
@@ -774,8 +774,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             # of confs supplied in the list below:
             chunkSp.set_confs([exp_confs[i] for i in conf_IDs])
             chunkSp.normalize()
-            theoretical_spectra_IDs = [i for i, c in enumerate(chunkIDs) if c == current_chunk_ID]
-            thrSp = [query[i] for i in theoretical_spectra_IDs]
+            components_spectra_IDs = [i for i, c in enumerate(chunkIDs) if c == current_chunk_ID]
+            thrSp = [query[i] for i in components_spectra_IDs]
 
             rerun = 0
             success = False
@@ -799,16 +799,16 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                     print("Noise proportion in mixture's spectrum:", sum(dec['trash']))
                     print('Total explanation:', sum(dec['probs'])+sum(dec['trash']))
                     if MTD_th is not None:
-                        print("Noise proportion in combination of components' spectra:", dec["noise_in_theoretical"])
+                        print("Noise proportion in combination of components' spectra:", dec["noise_in_components"])
             for i, p in enumerate(dec['probs']):
-                original_thr_spectrum_ID = theoretical_spectra_IDs[i]
+                original_thr_spectrum_ID = components_spectra_IDs[i]
                 proportions[original_thr_spectrum_ID] = p*chunk_TICs[current_chunk_ID]
             for i, p in enumerate(dec['trash']):
                 original_conf_id = conf_IDs[i]
                 vortex[original_conf_id] = p*chunk_TICs[current_chunk_ID]
             if MTD_th is not None:
-                p0_prime = p0_prime + dec["noise_in_theoretical"]*chunk_TICs[current_chunk_ID]
-                rescaled_vortex_th = [element*chunk_TICs[current_chunk_ID] for element in dec['theoretical_trash']]
+                p0_prime = p0_prime + dec["noise_in_components"]*chunk_TICs[current_chunk_ID]
+                rescaled_vortex_th = [element*chunk_TICs[current_chunk_ID] for element in dec['components_trash']]
                 vortex_th = vortex_th + rescaled_vortex_th
                 common_horizontal_axis = common_horizontal_axis + dec['common_horizontal_axis']
                 
@@ -825,8 +825,8 @@ Please check the deconvolution results and consider reporting this warning to th
 
     if compare_area:
         if MTD_th is not None:
-            return {'proportions': proportions, 'noise': vortex, 'noise_in_theoretical': vortex_th, 
-                'proportion_of_noise_in_theoretical': p0_prime, 'common_horizontal_axis': common_horizontal_axis, 
+            return {'proportions': proportions, 'noise': vortex, 'noise_in_components': vortex_th, 
+                'proportion_of_noise_in_components': p0_prime, 'common_horizontal_axis': common_horizontal_axis, 
                    'Wasserstein distance': objective_function}
         else:
             return {'proportions': proportions, 'noise': vortex,
