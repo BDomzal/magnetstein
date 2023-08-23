@@ -563,26 +563,28 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                         progress=False, MTD_th=0.22, solver=lp.GUROBI(),
                         what_to_compare='concentration'):
     """
-    Returns estimated proportions of molecules from query in spectrum.
-    Performs initial filtering of formulas and experimental spectrum to speed up the computations.
+    Returns estimated proportions of components from query in mixture's spectrum.
+    Performs initial filtering of components' and mixture's spectrum to speed up the computations.
     _____
     Parameters:
     spectrum: Spectrum object
-        The experimental (subject) spectrum.
+        The mixture's spectrum.
     query: list of Spectrum objects
-        A list of theoretical (reference) spectra.
+        A list of components' spectra (reference spectra).
     MTD: Maximum Transport Distance, float
-        Ion current from experimental spectrum will be transported up to this distance when estimating
-        molecule proportions. Default is 1.
+        Signal from mixture's spectrum will be transported up to this distance when estimating
+        components proportions. Default is 0.25.
     MDC: Minimum Detectable Current, float
-        If the isotopic envelope of an ion encompasses less than
+        In mass spectra, if the isotopic envelope of an ion encompasses less than
         this amount of the total ion current, it is assumed that this ion
-        is absent in the spectrum. Default is 1e-8.
+        is absent in the spectrum. Default is 1e-8. Role of this parameter for NMR
+        spectra is analogous.
     MMD: Maximum Mode Distance, float
-        If there is no experimental peak within this distance from the
+        In mass spectra, if there is no experimental peak within this distance from the
         highest peak of an isotopic envelope of a molecule,
         it is assumed that this molecule is absent in the spectrum.
-        Setting this value to -1 disables filtering. Default is -1.
+        Setting this value to -1 disables filtering. Default is -1. Role of this parameter
+        for NMR spectra is analogous.
     max_reruns: int
         Due to numerical errors, some partial results may be inaccurate.
         If this is detected, then those results are recomputed for a maximal number of times
@@ -590,12 +592,12 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     verbose: bool
         Print diagnostic messages? Default is False.
     progress: bool
-        Whether to display progress bars during work. Default is True.
+        Whether to display progress bars during work. Default is False.
     MTD_th: Maximum Transport Distance for theoretical spectra, float
-        If presence of noise in theoretical (reference, query) spectra is not expected, 
+        If presence of noise in components' (reference, query) spectra is not expected, 
         then this parameter should be set to None. Otherwise, set its value to some positive real number.
-        Ion current from theoretical spectra will be transported up to this distance 
-        when estimating molecule proportions. Default is None.
+        Signal from components' spectra will be transported up to this distance 
+        when estimating components' proportions. Default is 0.22.
     solver: 
         Which solver should be used. We recommend using lp.GUROBI() (note that it requires obtaining a licence).
         To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True). 
@@ -612,13 +614,13 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         The intensities correspond to the m/z values of the experimental spectrum.
         If MTD_th parameter is not equal to None, then the dictionary contains also 
         the following entries:
-        - noise_in_theoretical: List of intensities from query (i.e. theoretical, reference) spectra
+        - noise_in_theoretical: List of intensities from components' (i.e. reference) spectra
         that do not correspond to any intensities in the experimental spectrum and therefore were 
-        identified as noise. The intensities correspond to the m/z values from global mass axis.
-        - proportion_of_noise_in_theoretical: Proportion of noise present in the combination of query
-        (i.e. theoretical, reference) spectra.
-        - global_mass_axis: All the m/z values from the experimental spectrum and from the query 
-        (i.e. theoretical, reference) spectra in a sorted list. 
+        identified as noise. The intensities correspond to the ppm (or m/z) values from global mass axis.
+        - proportion_of_noise_in_theoretical: Proportion of noise present in the combination of components'
+        (i.e. reference) spectra.
+        - global_mass_axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' 
+        (i.e. reference) spectra in a sorted list. 
     """
 
     def progr_bar(x, **kwargs):
