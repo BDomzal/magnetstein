@@ -671,7 +671,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             print("Setting negative intensities to zero.")
             q.trim_negative_intensities()
 
-        if abs(sum(x[1] for x in q.confs) - 1.) < 1e-08:
+        if not abs(sum(x[1] for x in q.confs) - 1.) < 1e-08:
             print("Component's spectrum %i is not normalized" %i)
             print("Normalizing component's spectrum %i." %i)
             q.normalize()
