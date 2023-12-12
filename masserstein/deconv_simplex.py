@@ -14,7 +14,7 @@ from masserstein import misc
 def intensity_generator(confs, mzaxis):
         """
         Generates intensities from spectrum represented as a confs list,
-        over m/z values from mzaxis.
+        over ppm values from mzaxis.
         Assumes mzaxis and confs are sorted and returns consecutive intensities.
         """
         mzaxis_id = 0
@@ -56,7 +56,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
             Dictionary with the following entries:
             - probs: List containing proportions of consecutive theoretical (reference) spectra in the experimental
             spectrum. Note that they do not have to sum up to 1, because some part of the signal can be noise.
-            - trash: Amount of noise in the consecutive m/z points of the experimental spectrum.
+            - trash: Amount of noise in the consecutive ppm points of the experimental spectrum.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
         """
@@ -170,7 +170,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
             Dictionary with the following entries:
             - probs: List containing proportions of consecutive theoretical (reference) spectra in the experimental
             spectrum. Note that they do not have to sum up to 1, because some part of the signal can be noise.
-            - trash: Amount of noise in the consecutive m/z points of the experimental spectrum.
+            - trash: Amount of noise in the consecutive ppm points of the experimental spectrum.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
         """
@@ -290,12 +290,12 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             spectrum. Note that they do not have to sum up to 1, because some part of the signal can be noise.
             - noise_in_theoretical: Proportion of noise present in the combination of theoretical
             (reference) spectra.
-            - trash: Amount of noise in the consecutive m/z points of the experimental spectrum.
+            - trash: Amount of noise in the consecutive ppm points of the experimental spectrum.
             - theoretical trash: Amount of noise present in the combination of theoretical (reference)
-            spectra in consecutive m/z points from global mass axis.
+            spectra in consecutive ppm points from global mass axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
-            - global mass axis: All the m/z values from the experimental spectrum and from the theoretical 
+            - global mass axis: All the ppm values from the experimental spectrum and from the theoretical 
             (reference) spectra in a sorted list. 
         """
 
@@ -441,12 +441,12 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             spectrum. Note that they do not have to sum up to 1, because some part of the signal can be noise.
             - noise_in_theoretical: Proportion of noise present in the combination of theoretical
             (reference) spectra.
-            - trash: Amount of noise in the consecutive m/z points of the experimental spectrum.
+            - trash: Amount of noise in the consecutive ppm points of the experimental spectrum.
             - theoretical trash: Amount of noise present in the combination of theoretical (reference)
-            spectra in consecutive m/z points from global mass axis.
+            spectra in consecutive ppm points from global mass axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
-            - global mass axis: All the m/z values from the experimental spectrum and from the theoretical 
+            - global mass axis: All the ppm values from the experimental spectrum and from the theoretical 
             (reference) spectra in a sorted list. 
         """
 
@@ -572,16 +572,16 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     query: list of Spectrum objects
         A list of theoretical (reference) spectra.
     MTD: Maximum Transport Distance, float
-        Ion current from experimental spectrum will be transported up to this distance when estimating
-        molecule proportions. Default is 1.
+        Signal from experimental spectrum will be transported up to this distance when estimating
+        components' proportions. Default is 1.
     MDC: Minimum Detectable Current, float
-        If the isotopic envelope of an ion encompasses less than
-        this amount of the total ion current, it is assumed that this ion
+        If the spectrum of a component encompasses less than
+        this amount of the total signal, it is assumed that this component
         is absent in the spectrum. Default is 1e-8.
     MMD: Maximum Mode Distance, float
         If there is no experimental peak within this distance from the
-        highest peak of an isotopic envelope of a molecule,
-        it is assumed that this molecule is absent in the spectrum.
+        highest peak of spectrum of a component,
+        it is assumed that this component is absent in the spectrum.
         Setting this value to -1 disables filtering. Default is -1.
     max_reruns: int
         Due to numerical errors, some partial results may be inaccurate.
@@ -594,8 +594,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     MTD_th: Maximum Transport Distance for theoretical spectra, float
         If presence of noise in theoretical (reference, query) spectra is not expected, 
         then this parameter should be set to None. Otherwise, set its value to some positive real number.
-        Ion current from theoretical spectra will be transported up to this distance 
-        when estimating molecule proportions. Default is None.
+        Signal from theoretical spectra will be transported up to this distance 
+        when estimating components' proportions. Default is None.
     solver: 
         Which solver should be used. We recommend using lp.GUROBI() (note that it requires obtaining a licence).
         To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True). 
@@ -609,15 +609,15 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         A dictionary with the following entries:
         - proportions: List of proportions of query (i.e. theoretical, reference) spectra.
         - noise: List of intensities that could not be explained by the supplied formulas. 
-        The intensities correspond to the m/z values of the experimental spectrum.
+        The intensities correspond to the ppm values of the experimental spectrum.
         If MTD_th parameter is not equal to None, then the dictionary contains also 
         the following entries:
         - noise_in_theoretical: List of intensities from query (i.e. theoretical, reference) spectra
         that do not correspond to any intensities in the experimental spectrum and therefore were 
-        identified as noise. The intensities correspond to the m/z values from global mass axis.
+        identified as noise. The intensities correspond to the ppm values from global mass axis.
         - proportion_of_noise_in_theoretical: Proportion of noise present in the combination of query
         (i.e. theoretical, reference) spectra.
-        - global_mass_axis: All the m/z values from the experimental spectrum and from the query 
+        - global_mass_axis: All the ppm values from the experimental spectrum and from the query 
         (i.e. theoretical, reference) spectra in a sorted list. 
     """
 
