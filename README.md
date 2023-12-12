@@ -1,4 +1,5 @@
 # Magnetstein
+![main_workflow_final](https://github.com/BDomzal/magnetstein/assets/65540968/f3c35cfb-e996-4f2a-b01b-3007a7676bd0)
 
 This repository contains software tools which allow to compare nuclear magnetic resonance (NMR) spectra and estimate proportions of components in mixture using the Wasserstein distance. 
 
