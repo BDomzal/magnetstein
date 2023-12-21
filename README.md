@@ -58,5 +58,6 @@ Powered by [© Gurobi.](https://www.gurobi.com/)
 
 # Citing 
 
-Article about Magnetstein is in preparation. If you use tools from this package, please include link to this repository in citation.
+If you use tools from this package, please cite:
 
+Domżał, B., Nawrocka, E.K., Gołowicz, D., Ciach, M.A., Miasojedow, B., Kazimierczuk, K., & Gambin, A. (2023). Magnetstein: An Open-Source Tool for Quantitative NMR Mixture Analysis Robust to Low Resolution, Distorted Lineshapes, and Peak Shifts. Analytical Chemistry. DOI: 10.1021/acs.analchem.3c03594.
