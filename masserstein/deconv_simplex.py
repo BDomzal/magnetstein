@@ -635,6 +635,10 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     
     assert what_to_compare=='concentration' or what_to_compare=='area', 'Comparison of %s is not supported' %what_to_compare
 
+    if what_to_compare=='concentration':
+        for i, sp in enumerate(query):
+                assert sp.protons is not None, "Component " + str(i) +" doesn't have the number of protons defined. Please define sp.protons attribute."
+
     is_NMR_spectrum = [isinstance(sp, NMRSpectrum) for sp in [spectrum] + query]
     assert all(is_NMR_spectrum) or not any(is_NMR_spectrum), 'Spectra provided are of mixed types. \
             Please assert that either all or none of the spectra are NMR spectra.'
