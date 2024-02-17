@@ -80,7 +80,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
         n = len(common_horizontal_axis)
         k = len(thr_confs)
 
-        # Computing lengths of intervals between mz measurements (l_i variables)
+        # Computing lengths of intervals between ppm (or mz) measurements (l_i variables)
         interval_lengths = [common_horizontal_axis[i+1] - common_horizontal_axis[i] for i in range(n-1)]
         if not quiet:
                 print("Interval lengths computed")
@@ -195,7 +195,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         n = len(common_horizontal_axis)
         k = len(thr_confs)
 
-        # Computing lengths of intervals between mz measurements (l_i variables)
+        # Computing lengths of intervals between ppm (or mz) measurements (l_i variables)
         interval_lengths = [common_horizontal_axis[i+1] - common_horizontal_axis[i] for i in range(n-1)]
         if not quiet:
                 print("Interval lengths computed")
@@ -318,7 +318,7 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         n = len(common_horizontal_axis)
         k = len(thr_confs)
 
-        # Computing lengths of intervals between mz measurements (l_i variables)
+        # Computing lengths of intervals between ppm (or mz) measurements (l_i variables)
         interval_lengths = [common_horizontal_axis[i+1] - common_horizontal_axis[i] for i in range(n-1)]
         if not quiet:
                 print("Interval lengths computed")
@@ -467,7 +467,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         n = len(common_horizontal_axis)
         k = len(thr_confs)
 
-        # Computing lengths of intervals between mz measurements (l_i variables)
+        # Computing lengths of intervals between ppm(or mz) measurements (l_i variables)
         interval_lengths = [common_horizontal_axis[i+1] - common_horizontal_axis[i] for i in range(n-1)]
         if not quiet:
                 print("Interval lengths computed")
