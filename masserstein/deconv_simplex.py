@@ -607,10 +607,11 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     Returns: dict
         A dictionary with the following entries:
         - proportions: List of proportions of components' spectra.
-        - noise: List of intensities that could not be explained by the supplied formulas. 
+        - Wasserstein distance: Value of Wasserstein distance between mixture's spectrum and component's spectra added in computed proportions (taking into consideration removed signal).
         The intensities correspond to the ppm (or m/z) values of the mixture's spectrum.
-        If MTD_th parameter is not equal to None, then the dictionary contains also 
+        If what_to_compare='area' and MTD_th parameter is not equal to None, then the dictionary contains also 
         the following entries:
+        - noise: List of intensities that could not be explained by the supplied formulas. 
         - noise_in_components: List of intensities from components' spectra
         that do not correspond to any intensities in the mixture's spectrum and therefore were 
         identified as noise. The intensities correspond to the ppm (or m/z) values from common horizontal axis.
