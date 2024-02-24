@@ -65,9 +65,9 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
         thr_confs = [thr_sp.confs.copy() for thr_sp in thr_sps]
 
         # Normalization check:
-        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized"
+        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized."
         for i, thrcnf in enumerate(thr_confs):
-                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i is not normalized" % i
+                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i is not normalized." % i
 
         # Computing a common horizontal axis for all spectra
         exp_confs = [(m, i) for m, i in exp_confs]
@@ -180,9 +180,9 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         thr_confs = [thr_sp.confs.copy() for thr_sp in thr_sps]
 
         # Normalization check:
-        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized"
+        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized."
         for i, thrcnf in enumerate(thr_confs):
-                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized" % i
+                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized." % i
 
         # Computing a common horizontal axis for all spectra
         exp_confs = [(m, i) for m, i in exp_confs]
@@ -303,9 +303,9 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         thr_confs = [thr_sp.confs.copy() for thr_sp in thr_sps]
 
         # Normalization check:
-        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized"
+        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized."
         for i, thrcnf in enumerate(thr_confs):
-                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized" % i
+                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized." % i
 
         # Computing a common horizontal axis for all spectra
         exp_confs = [(m, i) for m, i in exp_confs]
@@ -452,9 +452,9 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         thr_confs = [thr_sp.confs.copy() for thr_sp in thr_sps]
 
         # Normalization check:
-        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized"
+        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized."
         for i, thrcnf in enumerate(thr_confs):
-                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized" % i
+                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized." % i
 
         # Computing a common horizontal axis for all spectra
         exp_confs = [(m, i) for m, i in exp_confs]
@@ -676,7 +676,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             q.trim_negative_intensities()
 
         if not abs(sum(x[1] for x in q.confs) - 1.) < 1e-08:
-            print("Component's spectrum %i is not normalized" %i)
+            print("Component's spectrum %i is not normalized." %i)
             print("Normalizing component's spectrum %i." %i)
             q.normalize()
 
