@@ -572,16 +572,14 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         Signal from mixture's spectrum will be transported up to this distance when estimating
         components proportions. Default is 0.25.
     MDC: Minimum Detectable Current, float
-        In mass spectra, if the isotopic envelope of an ion encompasses less than
-        this amount of the total ion current, it is assumed that this ion
-        is absent in the spectrum. Default is 1e-8. Role of this parameter for NMR
-        spectra is analogous.
+        If the spectrum of a component encompasses less than
+        this amount of the total signal, it is assumed that this component
+        is absent in the spectrum. Default is 1e-8.
     MMD: Maximum Mode Distance, float
-        In mass spectra, if there is no experimental peak within this distance from the
-        highest peak of an isotopic envelope of a molecule,
-        it is assumed that this molecule is absent in the spectrum.
-        Setting this value to -1 disables filtering. Default is -1. Role of this parameter
-        for NMR spectra is analogous.
+        If there is no mixture's peak within this distance from the
+        highest peak of spectrum of a component,
+        it is assumed that this component is absent in the spectrum.
+        Setting this value to -1 disables filtering. Default is -1.
     max_reruns: int
         Due to numerical errors, some partial results may be inaccurate.
         If this is detected, then those results are recomputed for a maximal number of times
@@ -607,11 +605,12 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     Returns: dict
         A dictionary with the following entries:
         - proportions: List of proportions of components' spectra.
-        - Wasserstein distance: Value of Wasserstein distance between mixture's spectrum and component's spectra added in computed proportions (taking into consideration removed signal).
-        The intensities correspond to the ppm (or m/z) values of the mixture's spectrum.
+        - Wasserstein distance: Value of Wasserstein distance between mixture's spectrum and component's spectra added 
+        in computed proportions (taking into consideration removed signal).
         If what_to_compare='area' and MTD_th parameter is not equal to None, then the dictionary contains also 
         the following entries:
         - noise: List of intensities that could not be explained by the supplied formulas. 
+        The intensities correspond to the ppm (or m/z) values of the mixture's spectrum.
         - noise_in_components: List of intensities from components' spectra
         that do not correspond to any intensities in the mixture's spectrum and therefore were 
         identified as noise. The intensities correspond to the ppm (or m/z) values from common horizontal axis.
