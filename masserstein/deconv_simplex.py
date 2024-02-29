@@ -56,7 +56,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
             Dictionary with the following entries:
             - probs: List containing proportions of consecutive components' spectra in the mixture's
             spectrum. Note that they do not have to sum up to 1, because some part of the signal can be noise.
-            - trash: Amount of noise in the consecutive ppm (or m/z) points of the mixture's spectrum.
+            - trash: Amount of noise in the consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
         """
@@ -132,7 +132,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
         probs = [round(constraints['P%i' % i].pi, 12) for i in range(1, k+1)]
         exp_vec = list(intensity_generator(exp_confs, common_horizontal_axis))
         # 'if' clause below is to restrict returned abyss to mixture's confs
-        abyss = [round(x.dj, 12) for i, x in enumerate(lpVars) if exp_vec[i] > 0.]
+        abyss = [round(x.dj, 12) for i, x in enumerate(lpVars) if exp_vec[i]]
         # note: accounting for number of summands in checking of result correctness,
         # because summation of many small numbers introduces numerical errors
         if not np.isclose(sum(probs)+sum(abyss), 1., atol=len(abyss)*1e-03):
@@ -170,7 +170,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
             Dictionary with the following entries:
             - probs: List containing proportions of consecutive components' spectra in the mixture's
             spectrum. Note that they do not have to sum up to 1, because some part of the signal can be noise.
-            - trash: Amount of noise in the consecutive ppm (or m/z) points of the mixture's spectrum.
+            - trash: Amount of noise in the consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
         """
@@ -245,7 +245,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         constraints = program.constraints
         probs = [round(constraints['P%i' % i].pi, 12) for i in range(1, k+1)]
         exp_vec = list(intensity_generator(exp_confs, common_horizontal_axis))
-        abyss = [round(constraints['g%i' % i].pi, 12) for i in range(1, n+1) if exp_vec[i-1] > 0.]
+        abyss = [round(constraints['g%i' % i].pi, 12) for i in range(1, n+1) if exp_vec[i-1]]
         # note: accounting for number of summands in checking of result correctness,
         # because summation of many small numbers introduces numerical errors
         if not np.isclose(sum(probs)+sum(abyss), 1., atol=len(abyss)*1e-03):
@@ -289,7 +289,7 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             - probs: List containing proportions of consecutive components' spectra in the mixture's
             spectrum. Note that they do not have to sum up to 1, because some part of the signal can be noise.
             - noise_in_components: Proportion of noise present in the combination of components' spectra.
-            - trash: Amount of noise in the consecutive ppm (or m/z) points of the mixture's spectrum.
+            - trash: Amount of noise in the consecutive ppm (or m/z) points from common horizontal axis.
             - components_trash: Amount of noise present in the combination of components'
             spectra in consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
@@ -439,7 +439,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             - probs: List containing proportions of consecutive components' spectra in the mixture's
             spectrum. Note that they do not have to sum up to 1, because some part of the signal can be noise.
             - noise_in_components: Proportion of noise present in the combination of components' spectra.
-            - trash: Amount of noise in the consecutive ppm (or m/z) points of the mixture's spectrum.
+            - trash: Amount of noise in the consecutive ppm (or m/z) points from common horizontal axis.
             - components_trash: Amount of noise present in the combination of components'
             spectra in consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
@@ -659,7 +659,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
 
     exp_confs = spectrum.confs
                            
-    vortex = [0.]*len(exp_confs)  # unexplained signal
+    #vortex = [0.]*len(exp_confs)  # unexplained signal
     k = len(query)
     proportions = [0.]*k
 
@@ -758,6 +758,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
 
     # Deconvolving chunks:
     p0_prime = 0
+    vortex =[]
     vortex_th = []
     common_horizontal_axis = []
     objective_function = 0
@@ -807,9 +808,11 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             for i, p in enumerate(dec['probs']):
                 original_thr_spectrum_ID = components_spectra_IDs[i]
                 proportions[original_thr_spectrum_ID] = p*chunk_TICs[current_chunk_ID]
-            for i, p in enumerate(dec['trash']):
-                original_conf_id = conf_IDs[i]
-                vortex[original_conf_id] = p*chunk_TICs[current_chunk_ID]
+            # for i, p in enumerate(dec['trash']):
+            #     original_conf_id = conf_IDs[i]
+            #     vortex[original_conf_id] = p*chunk_TICs[current_chunk_ID]
+            rescaled_vortex = [element*chunk_TICs[current_chunk_ID] for element in dec['trash']]
+            vortex = vortex + rescaled_vortex
             if MTD_th is not None:
                 p0_prime = p0_prime + dec["noise_in_components"]*chunk_TICs[current_chunk_ID]
                 rescaled_vortex_th = [element*chunk_TICs[current_chunk_ID] for element in dec['components_trash']]
