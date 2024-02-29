@@ -394,7 +394,7 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         probs = [round(constraints['P_%i' % i].pi, 12) for i in range(1, k+1)]
         p0_prime = round(constraints['p0_prime'].pi, 12)
         exp_vec = list(intensity_generator(exp_confs, common_horizontal_axis))
-        abyss = [round(constraints['g_%i' % i].pi, 12) for i in range(1, n+1) if exp_vec[i-1] > 0.]
+        abyss = [round(constraints['g_%i' % i].pi, 12) for i in range(1, n+1)]
         abyss_th = [round(constraints['g_prime_%i' % i].pi, 12) for i in range(1, n+1)]
 
         if not np.isclose(sum(probs)+sum(abyss), 1., atol=len(abyss)*1e-03):
@@ -542,7 +542,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         probs = [round(constraints['P_%i' % i].pi, 12) for i in range(1, k+1)]
         p0_prime = round(constraints['p0_prime'].pi, 12)
         exp_vec = list(intensity_generator(exp_confs, common_horizontal_axis))
-        abyss = [round(constraints['g_%i' % i].pi, 12) for i in range(1, n+1) if exp_vec[i-1] > 0.]
+        abyss = [round(constraints['g_%i' % i].pi, 12) for i in range(1, n+1)]
         abyss_th = [round(constraints['g_prime_%i' % i].pi, 12) for i in range(1, n+1)]
         if not np.isclose(sum(probs)+sum(abyss), 1., atol=len(abyss)*1e-03):
                 warn("""In dualdeconv4:
