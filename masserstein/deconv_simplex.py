@@ -748,9 +748,9 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             cur_bound = chunk_bounds[current_chunk]
         if cur_bound[0] <= cur_conf[0] <= cur_bound[1]:
             matching_confs.append(conf_id)
-        else:
-            # mixture's peaks outside chunks go straight to vortex
-            vortex[conf_id] = cur_conf[1]
+        # else:
+        #     # mixture's peaks outside chunks go straight to vortex
+        #     vortex[conf_id] = cur_conf[1]
     exp_conf_chunks.append(matching_confs)
     chunk_TICs = [sum(exp_confs[i][1] for i in chunk_list) for chunk_list in exp_conf_chunks]
     if verbose:
@@ -770,8 +770,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             # nothing to deconvolve, pushing remaining signal to vortex
             if verbose:
                 print('Chunk %i is almost empty - skipping deconvolution' % current_chunk_ID)
-            for i in conf_IDs:
-                vortex[i] = exp_confs[i][1]
+            # for i in conf_IDs:
+            #     vortex[i] = exp_confs[i][1]
         else:
             chunkSp = Spectrum('', empty=True)
             # Note: conf_IDs are monotonic w.r.t. conf mass,
