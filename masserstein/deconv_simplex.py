@@ -838,7 +838,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         vortex_th = sorted(vortex_th, key = lambda x: x[0])
         common_horizontal_axis_v_th = [el[0] for el in vortex_th]
         vortex_th = [el[1] for el in vortex_th]
-        assert common_horizontal_axis_v == common_horizontal_axis_v
+        assert common_horizontal_axis_v == common_horizontal_axis_v_th
     #finally, we update common_horizontal_axis
     common_horizontal_axis = common_horizontal_axis_v
 
