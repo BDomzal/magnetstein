@@ -827,7 +827,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     #confs from outside common_horizontal_axis are gathered in one list
     exp_confs_from_outside_cha = exp_confs_outside_chunks + exp_confs_in_almost_empty_chunks
     #appending these confs to vortex
-    vortex = list(zip(common_horizontal_axis, vortex) + exp_confs_from_outside_cha)
+    vortex = list(zip(common_horizontal_axis, vortex)) + exp_confs_from_outside_cha
     vortex = sorted(vortex, key = lambda x: x[0])
     common_horizontal_axis_v = [el[0] for el in vortex]
     vortex = [el[1] for el in vortex]
