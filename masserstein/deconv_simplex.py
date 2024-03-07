@@ -8,7 +8,7 @@ import tempfile
 from tqdm import tqdm
 from pulp.apis import LpSolverDefault
 from masserstein import misc
-
+import math
 
 
 def intensity_generator(confs, mzaxis):
@@ -655,7 +655,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     if not abs(sum(x[1] for x in exp_confs) - 1.) < 1e-08:
         print("The mixture's spectrum is not normalized.")
         print("Normalizing mixture's spectrum.")
-        scaling_factor = 1.0/sum([v[1] for v in exp_confs])
+        scaling_factor = 1.0/math.fsum(v[1] for v in exp_confs)
         exp_confs = [(v[0], v[1]*scaling_factor) for v in exp_confs]
 
     assert abs(sum(x[1] for x in exp_confs) - 1.) < 1e-08, "The mixture's spectrum is not normalized."
@@ -682,7 +682,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         if not abs(sum(x[1] for x in q_confs) - 1.) < 1e-08:
             print("Component's spectrum %i is not normalized." %i)
             print("Normalizing component's spectrum %i." %i)
-            scaling_factor = 1.0/sum([v[1] for v in q_confs])
+            scaling_factor = 1.0/math.fsum(v[1] for v in q_confs)
             q_confs = [(v[0], v[1]*scaling_factor) for v in q_confs]
 
         if not nmr:
