@@ -8,7 +8,7 @@ import tempfile
 from tqdm import tqdm
 from pulp.apis import LpSolverDefault
 from masserstein import misc
-
+import math
 
 
 def intensity_generator(confs, mzaxis):
@@ -650,14 +650,15 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     if any(x[1] < 0 for x in exp_confs):
         print("The mixture's spectrum cannot contain negative intensities. ")
         print("Setting negative intensities to zero.")
-        spectrum.trim_negative_intensities()
+        exp_confs = [(ppm, intsy if intsy >= 0 else 0.) for ppm, intsy in exp_confs]
 
     if not abs(sum(x[1] for x in exp_confs) - 1.) < 1e-08:
         print("The mixture's spectrum is not normalized.")
         print("Normalizing mixture's spectrum.")
-        spectrum.normalize()
+        scaling_factor = 1.0/math.fsum(v[1] for v in exp_confs)
+        exp_confs = [(v[0], v[1]*scaling_factor) for v in exp_confs]
 
-    exp_confs = spectrum.confs
+    assert abs(sum(x[1] for x in exp_confs) - 1.) < 1e-08, "The mixture's spectrum is not normalized."
                            
     vortex = [0.]*len(exp_confs)  # unexplained signal
     k = len(query)
@@ -668,26 +669,33 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     else:
         MTD_max = max(MTD, MTD_th)
 
+    preprocessed_query = []
     for i, q in enumerate(query):
 
-        if any(x[1] < 0 for x in q.confs):
+        q_confs = q.confs
+
+        if any(x[1] < 0 for x in q_confs):
             print("Component's spectrum %i cannot contain negative intensities." %i)
             print("Setting negative intensities to zero.")
-            q.trim_negative_intensities()
+            q_confs = [(ppm, intsy if intsy >= 0 else 0.) for ppm, intsy in q_confs]
 
-        if not abs(sum(x[1] for x in q.confs) - 1.) < 1e-08:
+        if not abs(sum(x[1] for x in q_confs) - 1.) < 1e-08:
             print("Component's spectrum %i is not normalized." %i)
             print("Normalizing component's spectrum %i." %i)
-            q.normalize()
+            scaling_factor = 1.0/math.fsum(v[1] for v in q_confs)
+            q_confs = [(v[0], v[1]*scaling_factor) for v in q_confs]
 
         if not nmr:
             assert all(x[0] >= 0 for x in q.confs), "Component's spectrum %i has negative masses!" %i
+            preprocessed_query.append(Spectrum(confs=q_confs))
+        else:
+            preprocessed_query.append(NMRSpectrum(confs=q_confs, protons=query[i].protons))
         
     # Initial filtering of formulas
     envelope_bounds = []
     filtered = []
     for i in progr_bar(range(k), desc = "Initial filtering of formulas"):
-        s = query[i]
+        s = preprocessed_query[i]
         mode = s.get_modal_peak()[0]
         mn = s.confs[0][0]
         mx = s.confs[-1][0]
@@ -779,7 +787,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             chunkSp.set_confs([exp_confs[i] for i in conf_IDs])
             chunkSp.normalize()
             components_spectra_IDs = [i for i, c in enumerate(chunkIDs) if c == current_chunk_ID]
-            thrSp = [query[i] for i in components_spectra_IDs]
+            thrSp = [preprocessed_query[i] for i in components_spectra_IDs]
 
             rerun = 0
             success = False
@@ -836,7 +844,7 @@ Please check the deconvolution results and consider reporting this warning to th
             return {'proportions': proportions, 'noise': vortex,
                     'Wasserstein distance': objective_function}
     else:
-        queries_protons = [query_spec.protons for query_spec in query]
+        queries_protons = [query_spec.protons for query_spec in preprocessed_query]
         rescaled_proportions = [prop/prot for prop, prot in zip(proportions, queries_protons)]
         rescaled_proportions = [prop/sum(rescaled_proportions) for prop in rescaled_proportions]
         return {'proportions': rescaled_proportions, 'Wasserstein distance': objective_function}
