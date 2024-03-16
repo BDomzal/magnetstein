@@ -132,7 +132,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
         probs = [round(constraints['P%i' % i].pi, 12) for i in range(1, k+1)]
         exp_vec = list(intensity_generator(exp_confs, common_horizontal_axis))
         # 'if' clause below is to restrict returned abyss to mixture's confs
-        abyss = [round(x.dj, 12) for i, x in enumerate(lpVars) if exp_vec[i]]
+        abyss = [round(x.dj, 12) for i, x in enumerate(lpVars)]
         # note: accounting for number of summands in checking of result correctness,
         # because summation of many small numbers introduces numerical errors
         if not np.isclose(sum(probs)+sum(abyss), 1., atol=len(abyss)*1e-03):
@@ -246,7 +246,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         constraints = program.constraints
         probs = [round(constraints['P%i' % i].pi, 12) for i in range(1, k+1)]
         exp_vec = list(intensity_generator(exp_confs, common_horizontal_axis))
-        abyss = [round(constraints['g%i' % i].pi, 12) for i in range(1, n+1) if exp_vec[i-1]]
+        abyss = [round(constraints['g%i' % i].pi, 12) for i in range(1, n+1)]
         # note: accounting for number of summands in checking of result correctness,
         # because summation of many small numbers introduces numerical errors
         if not np.isclose(sum(probs)+sum(abyss), 1., atol=len(abyss)*1e-03):
@@ -826,8 +826,14 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                 
         objective_function = objective_function + dec['fun']
 
+    assert len(common_horizontal_axis) == len(vortex)
+    if MTD_th is not None:
+        assert len(common_horizontal_axis) == len(vortex_th)
+
     #confs from outside common_horizontal_axis are gathered in one list
     exp_confs_from_outside_cha = exp_confs_outside_chunks + exp_confs_in_almost_empty_chunks
+    
+    
     #appending these confs to vortex
     vortex = list(zip(common_horizontal_axis, vortex)) + exp_confs_from_outside_cha
     vortex = sorted(vortex, key = lambda x: x[0])
@@ -843,6 +849,10 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         assert common_horizontal_axis_v == common_horizontal_axis_v_th
     #finally, we update common_horizontal_axis
     common_horizontal_axis = common_horizontal_axis_v
+
+    assert len(common_horizontal_axis) == len(vortex)
+    if MTD_th is not None:
+        assert len(common_horizontal_axis) == len(vortex_th)
 
 
     if not np.isclose(sum(proportions)+sum(vortex), 1., atol=len(vortex)*1e-03):
