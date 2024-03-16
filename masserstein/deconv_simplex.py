@@ -142,7 +142,8 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
                 Please check the deconvolution results and consider reporting this warning to the authors.
                                     """ % (sum(probs)+sum(abyss)))
 
-        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), 'status': program.status}
+        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), 'status': program.status,
+                'common_horizontal_axis': common_horizontal_axis}
 
 
 def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
@@ -255,7 +256,8 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
                 Please check the deconvolution results and consider reporting this warning to the authors.
                                     """ % (sum(probs)+sum(abyss)))
 
-        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), 'status': program.status}
+        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), 'status': program.status,
+                'common_horizontal_axis': common_horizontal_axis}
 
 
 
@@ -815,12 +817,12 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
 
             rescaled_vortex = [element*chunk_TICs[current_chunk_ID] for element in dec['trash']]
             vortex = vortex + rescaled_vortex
+            common_horizontal_axis = common_horizontal_axis + dec['common_horizontal_axis']
             
             if MTD_th is not None:
                 p0_prime = p0_prime + dec["noise_in_components"]*chunk_TICs[current_chunk_ID]
                 rescaled_vortex_th = [element*chunk_TICs[current_chunk_ID] for element in dec['components_trash']]
                 vortex_th = vortex_th + rescaled_vortex_th
-                common_horizontal_axis = common_horizontal_axis + dec['common_horizontal_axis']
                 
         objective_function = objective_function + dec['fun']
 
@@ -858,7 +860,7 @@ Please check the deconvolution results and consider reporting this warning to th
                 'proportion_of_noise_in_components': p0_prime, 'common_horizontal_axis': common_horizontal_axis, 
                    'Wasserstein distance': objective_function}
         else:
-            return {'proportions': proportions, 'noise': vortex,
+            return {'proportions': proportions, 'noise': vortex, 'common_horizontal_axis': common_horizontal_axis,
                     'Wasserstein distance': objective_function}
     else:
         queries_protons = [query_spec.protons for query_spec in query]
