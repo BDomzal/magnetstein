@@ -572,7 +572,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         A list of components' spectra (reference spectra).
     MTD: Maximum Transport Distance, float
         Signal from mixture's spectrum will be transported up to this distance when estimating
-        components proportions. Default is 0.25.
+        components proportions. This parameter is interpreted as denoising penalty for mixture.
+        To disable denoising, set this parameter to large value (for example 1000). Default is 0.25. 
     MDC: Minimum Detectable Current, float
         If the spectrum of a component encompasses less than
         this amount of the total signal, it is assumed that this component
@@ -594,7 +595,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         If presence of noise in components' spectra is not expected, 
         then this parameter should be set to None. Otherwise, set its value to some positive real number.
         Signal from components' spectra will be transported up to this distance 
-        when estimating components' proportions. Default is 0.22.
+        when estimating components' proportions. This parameter is interpreted as denoising penalty for components. Default is 0.22.
     solver: 
         Which solver should be used. We recommend using lp.GUROBI() (note that it requires obtaining a licence).
         To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True). 
