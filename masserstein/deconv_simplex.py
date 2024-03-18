@@ -484,7 +484,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         try:
                 for i in range(n-2):
                         lpVars.append(lp.LpVariable('Z%i' % (i+1), None, None, lp.LpContinuous))
-                lpVars.append(lp.LpVariable('Z%i' % (n-1), -interval_lengths[n-2], interval_lengths[n-2], lp.LpContinuous))
+                lpVars.append(lp.LpVariable('Z%i' % (n-1), -interval_lengths[n-2], interval_lengths[n-2], lp.LpContinuous)) #epsilon_plus n-1, epsilon minus n-1
         except IndexError: #linear program makes no sense if n<=2 (n-number of points in mixture's spectrum)
                 pass
         lpVars.append(lp.LpVariable('Z%i' % n, None, None, lp.LpContinuous))
@@ -516,7 +516,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 program +=  lpVars[i] - lpVars[n-1]  <=  0, 'g_%i' % (i+1)
                 program +=  -lpVars[i] - lpVars[n]  <= 0, 'g_prime_%i' % (i+1)
         try:
-                for i in range(n-2):
+                for i in range(n-2): #here we write constraints only up to n-2. Constraint for n-1 is written in definition of Z n-1 (line 487)
                         program += lpVars[i] - lpVars[i+1] <= interval_lengths[i], 'epsilon_plus_%i' % (i+1)
                         program += lpVars[i+1] - lpVars[i] <= interval_lengths[i], 'epsilon_minus_%i' % (i+1)
         except IndexError: #linear program makes no sense if n<=2 (n-number of points in mixture's spectrum)
@@ -546,6 +546,10 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         exp_vec = list(intensity_generator(exp_confs, common_horizontal_axis))
         abyss = [round(constraints['g_%i' % i].pi, 12) for i in range(1, n+1)]
         abyss_th = [round(constraints['g_prime_%i' % i].pi, 12) for i in range(1, n+1)]
+
+        epsilon_plus = [round(constraints['epsilon_plus_%i' % (i+1)].pi, 12) for i in range(n-2)]
+        epsilon_minus = [round(constraints['epsilon_minus_%i' % (i+1)].pi, 12) for i in range(n-2)]
+
         if not np.isclose(sum(probs)+sum(abyss), 1., atol=len(abyss)*1e-03):
                 warn("""In dualdeconv4:
                 Proportions of signal and noise sum to %f instead of 1.
