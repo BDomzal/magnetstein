@@ -524,6 +524,11 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
 
         program += -lpVars[n-1] <= 0, 'g_%i' % (n)
         program += -lpVars[n] <= 0, 'g_prime_%i' % (n)
+        
+        #adding constraints for epsilon n-1
+        #(here instead of in variable definition to easily retrieve dual variables)
+        program += -lpVars[n-2] <= interval_lengths[n-2], 'epsilon_plus_%i' % (n-1)
+        program += lpVars[n-2] <= interval_lengths[n-2], 'epsilon_minus_%i' % (n-1)
 
         if not quiet:
                 print("Constraints written")
@@ -547,8 +552,9 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         abyss = [round(constraints['g_%i' % i].pi, 12) for i in range(1, n+1)]
         abyss_th = [round(constraints['g_prime_%i' % i].pi, 12) for i in range(1, n+1)]
 
-        epsilon_plus = [round(constraints['epsilon_plus_%i' % (i+1)].pi, 12) for i in range(n-2)]
-        epsilon_minus = [round(constraints['epsilon_minus_%i' % (i+1)].pi, 12) for i in range(n-2)]
+        epsilon_plus = [round(constraints['epsilon_plus_%i' % (i+1)].pi, 12) for i in range(n-1)]
+        epsilon_minus = [round(constraints['epsilon_minus_%i' % (i+1)].pi, 12) for i in range(n-1)]
+        epsilon = list(np.array(epsilon_plus) - np.array(epsilon_minus))
 
         if not np.isclose(sum(probs)+sum(abyss), 1., atol=len(abyss)*1e-03):
                 warn("""In dualdeconv4:
@@ -558,7 +564,8 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                                     """ % (sum(probs)+sum(abyss)))
 
         return {"probs": probs, "noise_in_components": p0_prime, "trash": abyss, "components_trash": abyss_th, 
-        "fun": lp.value(program.objective)+penalty, 'status': program.status, 'common_horizontal_axis': common_horizontal_axis}
+        "fun": lp.value(program.objective)+penalty, 'status': program.status, 'common_horizontal_axis': common_horizontal_axis,
+               'epsilon': epsilon}
 
 
 def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
