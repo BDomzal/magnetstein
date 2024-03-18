@@ -484,7 +484,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         try:
                 for i in range(n-2):
                         lpVars.append(lp.LpVariable('Z%i' % (i+1), None, None, lp.LpContinuous))
-                lpVars.append(lp.LpVariable('Z%i' % (n-1), -interval_lengths[n-2], interval_lengths[n-2], lp.LpContinuous)) #epsilon_plus n-1, epsilon minus n-1
+                lpVars.append(lp.LpVariable('Z%i' % (n-1), None, None, lp.LpContinuous)) #epsilon_plus n-1, epsilon minus n-1
         except IndexError: #linear program makes no sense if n<=2 (n-number of points in mixture's spectrum)
                 pass
         lpVars.append(lp.LpVariable('Z%i' % n, None, None, lp.LpContinuous))
