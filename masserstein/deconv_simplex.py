@@ -564,8 +564,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                                     """ % (sum(probs)+sum(abyss)))
 
         return {"probs": probs, "noise_in_components": p0_prime, "trash": abyss, "components_trash": abyss_th, 
-        "fun": lp.value(program.objective)+penalty, 'status': program.status, 'common_horizontal_axis': common_horizontal_axis,
-               'transport_plan': transport_plan}
+        "fun": lp.value(program.objective)+penalty, 'status': program.status, 'common_horizontal_axis': common_horizontal_axis}
 
 
 def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
