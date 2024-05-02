@@ -833,7 +833,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                 rescaled_vortex_th = [element*chunk_TICs[current_chunk_ID] for element in dec['components_trash']]
                 vortex_th = vortex_th + rescaled_vortex_th
                 
-        objective_function = objective_function + dec['fun']
+            objective_function = objective_function + dec['fun']
 
     assert len(common_horizontal_axis) == len(vortex)
     if MTD_th is not None:
