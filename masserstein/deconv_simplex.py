@@ -34,7 +34,8 @@ def intensity_generator(confs, mzaxis):
                 yield 0.
 
 
-def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
+def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
+                initial_proportions=None):
         """
         This function solves linear program describing optimal transport of signal between the mixture's spectrum
         and the list of components' spectra. Additionally, an auxiliary point is introduced in order to
@@ -146,7 +147,8 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
                 'common_horizontal_axis': common_horizontal_axis}
 
 
-def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
+def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
+                                initial_proportions=None):
 
         """
         Alternative version of dualdeconv2 - using .pi instead of .dj to extract optimal values of variables.
@@ -261,7 +263,8 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
 
 
 
-def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault):
+def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault,
+                initial_proportions=None):
 
         """
         This function solves linear program describing optimal transport of signal between 
@@ -410,7 +413,8 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
          "fun": lp.value(program.objective), 'status': program.status, 'common_horizontal_axis': common_horizontal_axis}
 
 
-def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault):
+def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault,
+                initial_proportions=None):
 
         """
         This function solves linear program describing optimal transport of signal between the mixture's 
@@ -560,7 +564,8 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
 def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                         MMD=-1, max_reruns=3, verbose=False, 
                         progress=False, MTD_th=0.22, solver=lp.GUROBI(),
-                        what_to_compare='concentration'):
+                        what_to_compare='concentration',
+                        initial_proportions=None):
     """
     Returns estimated proportions of components from query in mixture's spectrum.
     Performs initial filtering of components' and mixture's spectra to speed up the computations.
@@ -805,9 +810,9 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                             raise RuntimeError("Failed to deconvolve a fragment of the mixture's spectrum:\
                                                  (%f, %f)" % chunk_bounds[current_chunk_ID])
                     if MTD_th is None:
-                        dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver)
+                        dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver, initial_proportions=initial_proportions)
                     else:
-                        dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver)
+                        dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver, initial_proportions=initial_proportions)
                     if dec['status'] == 1:
                             success=True
                     else:
