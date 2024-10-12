@@ -921,3 +921,131 @@ Please check the deconvolution results and consider reporting this warning to th
                         'output_warm_start_values': output_warm_start_values}
 
     return result_dict
+
+
+
+def estimate_proportions_during_reaction(mixture_in_time, reagents_spectra, what_to_compare='area', 
+                                        solver=pulp.GUROBI(msg=False),
+                                        MTD=kappa, MTD_th=kappa_th,
+                                        verbose=True):
+        
+        
+    # Checking type of spectra
+
+    are_reagents_NMR_spectra = [isinstance(sp, NMRSpectrum) for sp in reagents_spectra]
+    assert all(are_reagents_NMR_spectra) or not any(are_reagents_NMR_spectra), 
+            'Provided spectra of reagents are of mixed types. \
+            Please assert that either all or none of the spectra are NMR spectra.'
+
+    nmr = all(are_reagents_NMR_spectra)
+
+    
+    # Loading spectra of mixtures into a single list
+    
+    if isinstance(mixture_in_time, list):
+
+        mixture_in_time_list = mixture_in_time
+
+        are_mixtures_NMR_spectra = [isinstance(sp, NMRSpectrum) for sp in mixture_in_time_list]
+
+        assert all(are_mixtures_NMR_spectra) or not any(are_mixtures_NMR_spectra), 
+                'Provided spectra of mixtures are of mixed types. \
+                Please assert that either all or none of the spectra are NMR spectra.'
+
+
+    elif isinstance(mixture_in_time, np.ndarray):
+
+        horizontal_axis = mixture_in_time[:,0]
+        intensities = [mixture_in_time[:,i] for i in range(1, mixture_in_time.shape[1])]
+        mixtures_confs_list = [list(zip(horizontal_axis, intensity)) for intensity in intensities]
+
+        if nmr:
+            mixture_in_time_list = [NMRSpectrum(confs=conf) for conf in mixtures_confs_list]
+        else:
+            mixture_in_time_list = [Spectrum(confs=conf) for conf in mixtures_confs_list]
+
+
+    else:
+    print('Cannot retrieve spectra of mixtures from mixture_in_time.\
+            Make sure that provided object is either a list of Spectum objects or numpy.ndarray.')
+
+
+    
+    # Preparing lists for storing the results
+
+    proportions_in_time = []
+    noise_proportions_in_time = []
+    noise = []
+    noise_in_components = []
+    common_horizontal_axis = []
+
+    
+    # Estimation
+
+    for i, mix in enumerate(mixture_in_time_list):
+
+        if verbose:
+            print('Analyzing timepoint '+str(i)+'.\n')
+
+        current_mix = mix
+        current_mix.trim_negative_intensities()
+        current_mix.normalize()
+        current_horizontal_axis_list = [conf[0] for conf in current_mix.confs]
+
+        if i==0:
+
+            estimation = estimate_proportions(current_mix, reagents_spectra, 
+                                                what_to_compare=what_to_compare, 
+                                                solver=solver,
+                                                MTD=kappa, 
+                                                MTD_th=kappa_th,
+                                                warm_start_values=None)
+
+        else:
+
+            if current_horizontal_axis == previous_horizontal_axis:
+
+                estimation = estimate_proportions(current_mix, reagents_spectra, 
+                                                what_to_compare=what_to_compare, 
+                                                solver=solver,
+                                                MTD=kappa, 
+                                                MTD_th=kappa_th,
+                                                warm_start_values=current_warm_start_values)
+
+            else:
+
+                if verbose:
+                    print('Current mixture spectrum (' + '+str(i)' + \
+                            ') has different chemical shift axis than the previous one.\
+                            Therefore, estimation for this spectrum will be performed \
+                            without using information from the previous time point.')
+                estimation = estimate_proportions(current_mix, reagents_spectra, 
+                                                what_to_compare=what_to_compare, 
+                                                solver=solver,
+                                                MTD=kappa, 
+                                                MTD_th=kappa_th,
+                                                warm_start_values=None)
+
+
+        previous_horizontal_axis = current_horizontal_axis
+
+        proportions_in_time.append(estimation['proportions'])
+        noise_proportions_in_times.append(estimation['proportion_of_noise_in_components'])
+        noise.append(estimation['noise'])
+        noise_in_components.append(estimation['noise_in_components'])
+        common_horizontal_axis_list.append(estimation['common_horizontal_axis'])
+
+        current_warm_start_values = estimation['output_warm_start_values']
+
+        if verbose:
+
+            print('Proportions:\n')
+            print(estimation['proportions'])
+            print('\n')
+
+    
+    return {'proportions_in_time' : proportions_in_time,
+            'noise_in_mixture_in_time' : noise, 
+           'noise_in_components_in_time' : noise_in_components, 
+            'proportion_of_noise_in_components_in_time': noise_proportions_in_times,
+           'common_horizontal_axis_in_time' : common_horizontal_axis_list}
