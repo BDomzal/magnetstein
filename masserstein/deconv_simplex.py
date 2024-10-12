@@ -145,7 +145,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
 
         return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), "status": program.status,
                 "common_horizontal_axis": common_horizontal_axis,
-                "primal_program_solution": constraints, 'output_warm_start_values': [(v, v.varValue) for v in program.variables()]}
+                "output_warm_start_values": [(v, v.varValue) for v in program.variables()]}
 
 
 def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
@@ -261,7 +261,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
 
         return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), "status": program.status,
                 "common_horizontal_axis": common_horizontal_axis,
-                "primal_program_solution": constraints, 'output_warm_start_values': [(v, v.varValue) for v in program.variables()]}
+                "output_warm_start_values": [(v, v.varValue) for v in program.variables()]}
 
 
 
@@ -413,7 +413,7 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
 
         return {"probs": probs, "noise_in_components": p0_prime, "trash": abyss, "components_trash": abyss_th,
                 "fun": lp.value(program.objective), "status": program.status, "common_horizontal_axis": common_horizontal_axis,
-                "primal_program_solution": constraints, 'output_warm_start_values': [(v, v.varValue) for v in program.variables()]}
+                "output_warm_start_values": [(v, v.varValue) for v in program.variables()]}
 
 
 def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault,
@@ -570,7 +570,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
 
         return {"probs": probs, "noise_in_components": p0_prime, "trash": abyss, "components_trash": abyss_th, 
                 "fun": lp.value(program.objective)+penalty, "status": program.status, "common_horizontal_axis": common_horizontal_axis,
-                "primal_program_solution": constraints, 'output_warm_start_values': [(str(v), v.varValue) for v in program.variables()]}
+                'output_warm_start_values': [(str(v), v.varValue) for v in program.variables()]}
 
 
 def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
