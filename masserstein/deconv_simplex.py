@@ -35,7 +35,7 @@ def intensity_generator(confs, mzaxis):
 
 
 def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
-                initial_proportions=None):
+                warm_start_values=None):
         """
         This function solves linear program describing optimal transport of signal between the mixture's spectrum
         and the list of components' spectra. Additionally, an auxiliary point is introduced in order to
@@ -143,12 +143,13 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
                 Please check the deconvolution results and consider reporting this warning to the authors.
                                     """ % (sum(probs)+sum(abyss)))
 
-        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), 'status': program.status,
-                'common_horizontal_axis': common_horizontal_axis}
+        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), "status": program.status,
+                "common_horizontal_axis": common_horizontal_axis,
+                "primal_program_solution": constraints, 'output_warm_start_values': [(v, v.varValue) for v in program.variables()]}
 
 
 def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
-                                initial_proportions=None):
+                                warm_start_values=None):
 
         """
         Alternative version of dualdeconv2 - using .pi instead of .dj to extract optimal values of variables.
@@ -258,13 +259,14 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
                 Please check the deconvolution results and consider reporting this warning to the authors.
                                     """ % (sum(probs)+sum(abyss)))
 
-        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), 'status': program.status,
-                'common_horizontal_axis': common_horizontal_axis}
+        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), "status": program.status,
+                "common_horizontal_axis": common_horizontal_axis,
+                "primal_program_solution": constraints, 'output_warm_start_values': [(v, v.varValue) for v in program.variables()]}
 
 
 
 def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault,
-                initial_proportions=None):
+                warm_start_values=None):
 
         """
         This function solves linear program describing optimal transport of signal between 
@@ -410,11 +412,12 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                                     """ % (sum(probs)+sum(abyss)))
 
         return {"probs": probs, "noise_in_components": p0_prime, "trash": abyss, "components_trash": abyss_th,
-         "fun": lp.value(program.objective), 'status': program.status, 'common_horizontal_axis': common_horizontal_axis}
+                "fun": lp.value(program.objective), "status": program.status, "common_horizontal_axis": common_horizontal_axis,
+                "primal_program_solution": constraints, 'output_warm_start_values': [(v, v.varValue) for v in program.variables()]}
 
 
 def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault,
-                initial_proportions=None):
+                warm_start_values=None):
 
         """
         This function solves linear program describing optimal transport of signal between the mixture's 
@@ -535,6 +538,14 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         if not quiet:
                 print("Starting solver")
 
+        if warm_start_values is not None:
+            warm_start_values = dict(warm_start_values)
+            for var in program.variables():
+                try:
+                    var.setInitialValue(warm_start_values[str(var)])
+                except ValueError:
+                    pass
+
         #Solving
         LpSolverDefault.msg = not quiet
         program.solve(solver = solver)
@@ -558,14 +569,15 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                                     """ % (sum(probs)+sum(abyss)))
 
         return {"probs": probs, "noise_in_components": p0_prime, "trash": abyss, "components_trash": abyss_th, 
-        "fun": lp.value(program.objective)+penalty, 'status': program.status, 'common_horizontal_axis': common_horizontal_axis}
+                "fun": lp.value(program.objective)+penalty, "status": program.status, "common_horizontal_axis": common_horizontal_axis,
+                "primal_program_solution": constraints, 'output_warm_start_values': [(str(v), v.varValue) for v in program.variables()]}
 
 
 def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                         MMD=-1, max_reruns=3, verbose=False, 
                         progress=False, MTD_th=0.22, solver=lp.GUROBI(),
                         what_to_compare='concentration',
-                        initial_proportions=None):
+                        warm_start_values=None):
     """
     Returns estimated proportions of components from query in mixture's spectrum.
     Performs initial filtering of components' and mixture's spectra to speed up the computations.
@@ -780,6 +792,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     common_horizontal_axis = []
     objective_function = 0
     exp_confs_in_almost_empty_chunks = []
+    output_warm_start_values = []
+
     for current_chunk_ID, conf_IDs in progr_bar(enumerate(exp_conf_chunks), desc="Deconvolving chunks",
                                                                             total=len(exp_conf_chunks)):
         if verbose:
@@ -837,6 +851,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                 p0_prime = p0_prime + dec["noise_in_components"]*chunk_TICs[current_chunk_ID]
                 rescaled_vortex_th = [element*chunk_TICs[current_chunk_ID] for element in dec['components_trash']]
                 vortex_th = vortex_th + rescaled_vortex_th
+
+            output_warm_start_values.append(dec['output_warm_start_values'])
                 
             objective_function = objective_function + dec['fun']
 
@@ -880,14 +896,17 @@ Please check the deconvolution results and consider reporting this warning to th
 
     if compare_area:
         if MTD_th is not None:
-            return {'proportions': proportions, 'noise': vortex, 'noise_in_components': vortex_th, 
+            result_dict = {'proportions': proportions, 'noise': vortex, 'noise_in_components': vortex_th, 
                 'proportion_of_noise_in_components': p0_prime, 'common_horizontal_axis': common_horizontal_axis, 
-                   'Wasserstein distance': objective_function}
+                   'Wasserstein distance': objective_function, 'output_warm_start_values': output_warm_start_values}
         else:
-            return {'proportions': proportions, 'noise': vortex, 'common_horizontal_axis': common_horizontal_axis,
-                    'Wasserstein distance': objective_function}
+            result_dict = {'proportions': proportions, 'noise': vortex, 'common_horizontal_axis': common_horizontal_axis,
+                    'Wasserstein distance': objective_function, 'output_warm_start_values': output_warm_start_values}
     else:
         queries_protons = [query_spec.protons for query_spec in preprocessed_query]
         rescaled_proportions = [prop/prot for prop, prot in zip(proportions, queries_protons)]
         rescaled_proportions = [prop/sum(rescaled_proportions) for prop in rescaled_proportions]
-        return {'proportions': rescaled_proportions, 'Wasserstein distance': objective_function}
+        result_dict = {'proportions': rescaled_proportions, 'Wasserstein distance': objective_function,
+                        'output_warm_start_values': output_warm_start_values}
+
+    return result_dict
