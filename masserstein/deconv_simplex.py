@@ -794,6 +794,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     exp_confs_in_almost_empty_chunks = []
     output_warm_start_values = []
 
+    warm_start_possible = warm_start_values is not None and len(warm_start_values) == len(exp_conf_chunks)
+
     for current_chunk_ID, conf_IDs in progr_bar(enumerate(exp_conf_chunks), desc="Deconvolving chunks",
                                                                             total=len(exp_conf_chunks)):
         if verbose:
@@ -824,9 +826,18 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                             raise RuntimeError("Failed to deconvolve a fragment of the mixture's spectrum:\
                                                  (%f, %f)" % chunk_bounds[current_chunk_ID])
                     if MTD_th is None:
-                        dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver, initial_proportions=initial_proportions)
+                        if warm_start_possible:
+                            dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver, initial_proportions=initial_proportions, warm_start_values=warm_start_values[current_chunk_ID])
+
+                        else:
+                            dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver, initial_proportions=initial_proportions, warm_start_values=None)
+                            
                     else:
-                        dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver, initial_proportions=initial_proportions)
+                        if warm_start_possible:
+                            dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver, initial_proportions=initial_proportions, warm_start_values=warm_start_values[current_chunk_ID])
+                        else:
+                            dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver, initial_proportions=initial_proportions, warm_start_values=None)
+
                     if dec['status'] == 1:
                             success=True
                     else:
