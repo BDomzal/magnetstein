@@ -827,16 +827,16 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                                                  (%f, %f)" % chunk_bounds[current_chunk_ID])
                     if MTD_th is None:
                         if warm_start_possible:
-                            dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver, initial_proportions=initial_proportions, warm_start_values=warm_start_values[current_chunk_ID])
+                            dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver, warm_start_values=warm_start_values[current_chunk_ID])
 
                         else:
-                            dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver, initial_proportions=initial_proportions, warm_start_values=None)
+                            dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver, warm_start_values=None)
                             
                     else:
                         if warm_start_possible:
-                            dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver, initial_proportions=initial_proportions, warm_start_values=warm_start_values[current_chunk_ID])
+                            dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver, warm_start_values=warm_start_values[current_chunk_ID])
                         else:
-                            dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver, initial_proportions=initial_proportions, warm_start_values=None)
+                            dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver, warm_start_values=None)
 
                     if dec['status'] == 1:
                             success=True
@@ -925,15 +925,15 @@ Please check the deconvolution results and consider reporting this warning to th
 
 
 def estimate_proportions_during_reaction(mixture_in_time, reagents_spectra, what_to_compare='area', 
-                                        solver=pulp.GUROBI(msg=False),
-                                        MTD=kappa, MTD_th=kappa_th,
+                                        solver=lp.GUROBI(msg=False, warm_start=True),
+                                        MTD=0.25, MTD_th=0.22,
                                         verbose=True):
         
         
     # Checking type of spectra
 
     are_reagents_NMR_spectra = [isinstance(sp, NMRSpectrum) for sp in reagents_spectra]
-    assert all(are_reagents_NMR_spectra) or not any(are_reagents_NMR_spectra), 
+    assert all(are_reagents_NMR_spectra) or not any(are_reagents_NMR_spectra), \
             'Provided spectra of reagents are of mixed types. \
             Please assert that either all or none of the spectra are NMR spectra.'
 
@@ -948,7 +948,7 @@ def estimate_proportions_during_reaction(mixture_in_time, reagents_spectra, what
 
         are_mixtures_NMR_spectra = [isinstance(sp, NMRSpectrum) for sp in mixture_in_time_list]
 
-        assert all(are_mixtures_NMR_spectra) or not any(are_mixtures_NMR_spectra), 
+        assert all(are_mixtures_NMR_spectra) or not any(are_mixtures_NMR_spectra), \
                 'Provided spectra of mixtures are of mixed types. \
                 Please assert that either all or none of the spectra are NMR spectra.'
 
@@ -966,8 +966,8 @@ def estimate_proportions_during_reaction(mixture_in_time, reagents_spectra, what
 
 
     else:
-    print('Cannot retrieve spectra of mixtures from mixture_in_time.\
-            Make sure that provided object is either a list of Spectum objects or numpy.ndarray.')
+        print('Cannot retrieve spectra of mixtures from mixture_in_time.\
+                Make sure that provided object is either a list of Spectum objects or numpy.ndarray.')
 
 
     
@@ -977,7 +977,7 @@ def estimate_proportions_during_reaction(mixture_in_time, reagents_spectra, what
     noise_proportions_in_time = []
     noise = []
     noise_in_components = []
-    common_horizontal_axis = []
+    common_horizontal_axis_list = []
 
     
     # Estimation
@@ -990,15 +990,15 @@ def estimate_proportions_during_reaction(mixture_in_time, reagents_spectra, what
         current_mix = mix
         current_mix.trim_negative_intensities()
         current_mix.normalize()
-        current_horizontal_axis_list = [conf[0] for conf in current_mix.confs]
+        current_horizontal_axis = [conf[0] for conf in current_mix.confs]
 
         if i==0:
 
             estimation = estimate_proportions(current_mix, reagents_spectra, 
                                                 what_to_compare=what_to_compare, 
                                                 solver=solver,
-                                                MTD=kappa, 
-                                                MTD_th=kappa_th,
+                                                MTD=MTD, 
+                                                MTD_th=MTD_th,
                                                 warm_start_values=None)
 
         else:
@@ -1008,8 +1008,8 @@ def estimate_proportions_during_reaction(mixture_in_time, reagents_spectra, what
                 estimation = estimate_proportions(current_mix, reagents_spectra, 
                                                 what_to_compare=what_to_compare, 
                                                 solver=solver,
-                                                MTD=kappa, 
-                                                MTD_th=kappa_th,
+                                                MTD=MTD, 
+                                                MTD_th=MTD_th,
                                                 warm_start_values=current_warm_start_values)
 
             else:
@@ -1022,15 +1022,15 @@ def estimate_proportions_during_reaction(mixture_in_time, reagents_spectra, what
                 estimation = estimate_proportions(current_mix, reagents_spectra, 
                                                 what_to_compare=what_to_compare, 
                                                 solver=solver,
-                                                MTD=kappa, 
-                                                MTD_th=kappa_th,
+                                                MTD=MTD, 
+                                                MTD_th=MTD_th,
                                                 warm_start_values=None)
 
 
         previous_horizontal_axis = current_horizontal_axis
 
         proportions_in_time.append(estimation['proportions'])
-        noise_proportions_in_times.append(estimation['proportion_of_noise_in_components'])
+        noise_proportions_in_time.append(estimation['proportion_of_noise_in_components'])
         noise.append(estimation['noise'])
         noise_in_components.append(estimation['noise_in_components'])
         common_horizontal_axis_list.append(estimation['common_horizontal_axis'])
