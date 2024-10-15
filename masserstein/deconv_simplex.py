@@ -538,13 +538,19 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         if not quiet:
                 print("Starting solver")
 
-        if warm_start_values is not None:
+        if warm_start_values is not None and len(warm_start_values) == len(program.variables()):
             warm_start_values = dict(warm_start_values)
             for var in program.variables():
                 try:
                     var.setInitialValue(warm_start_values[str(var)])
                 except ValueError:
                     pass
+        else:
+            if not quiet:
+                print('Current mixture spectrum (' + '+str(i)' + \
+                        ') has different chemical shift axis than the previous one.\
+                        Therefore, estimation for this spectrum will be performed \
+                        without using information from the previous time point.')
 
         #Solving
         LpSolverDefault.msg = not quiet
@@ -1047,5 +1053,5 @@ def estimate_proportions_during_reaction(mixture_in_time, reagents_spectra, what
     return {'proportions_in_time' : proportions_in_time,
             'noise_in_mixture_in_time' : noise, 
            'noise_in_components_in_time' : noise_in_components, 
-            'proportion_of_noise_in_components_in_time': noise_proportions_in_times,
+            'proportion_of_noise_in_components_in_time': noise_proportions_in_time,
            'common_horizontal_axis_in_time' : common_horizontal_axis_list}
