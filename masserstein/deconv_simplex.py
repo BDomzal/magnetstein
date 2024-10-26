@@ -1010,7 +1010,7 @@ Please check the deconvolution results and consider reporting this warning to th
 
 
 
-def estimate_proportions_during_reaction(mixture_in_time, reagents_spectra, what_to_compare='area', 
+def estimate_proportions_in_time(mixture_in_time, reagents_spectra, what_to_compare='area', 
                                         solver=lp.GUROBI(msg=False, warm_start=True),
                                         MTD=0.25, MTD_th=0.22,
                                         verbose=True):
