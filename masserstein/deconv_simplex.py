@@ -707,6 +707,13 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     what_to_compare:
         Should the resulting proportions correspond to concentrations or area under the curve? Default is
         'concentration'. Alternatively can be set to 'area'. This argument is used only for NMR spectra.
+    warm_start_values:
+        List of lists of tuples with variable as the first element of the tuple and value of the variable as the second element of the tuple.
+        Each of the nested lists corresponds to a chunk in exp_conf_chunKs.
+        Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
+        You can extract the values from the previous run of the function using 'output_warm_start_values' key.
+        Important note: if you want to use this argument, you need to set warm_start=True for the used solver.
+        For example: lp.GUROBI(warm_start=True).
     _____
     Returns: dict
         A dictionary with the following entries:
@@ -724,6 +731,11 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         spectra.
         - common_horizontal_axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' 
         spectra in a sorted list. 
+        - output_warm_start_values: List of lists of tuples with variable as the first element of the tuple and optimal value of the variable 
+        as the second element of the tuple.
+        Each of the nested lists corresponds to a chunk in exp_conf_chunKs.
+        These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
+        obtained in the current run.
     """
 
     def progr_bar(x, **kwargs):
@@ -1010,10 +1022,61 @@ Please check the deconvolution results and consider reporting this warning to th
 
 
 
-def estimate_proportions_in_time(mixture_in_time, reagents_spectra, what_to_compare='area', 
-                                        solver=lp.GUROBI(msg=False, warm_start=True),
-                                        MTD=0.25, MTD_th=0.22,
-                                        verbose=True):
+def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.1, MDC=1e-8,
+                                MMD=-1, max_reruns=3, verbose=False,
+                                MTD_th=1.0, solver=lp.GUROBI(msg=False, warm_start=True),
+                                what_to_compare='area'):
+
+    """
+    Returns estimated proportions of reagents and noise in mixture changing over time.
+    Uses estimation from previous time point to speed up the computations.
+    _____
+    Parameters:
+    mixture_in_time: list of Spectrum objects or np.ndarray
+        The mixture's spectrum in consecutive time points. If list of Spectrum objects, then the earliest spectrum should be 
+        an element 0 of the list. If np.ndarray, then column 0 of the array should contain chemical shift values, and the 
+        other columns should contain intensities (those corresponding to the earliest spectrum should be in column 1).
+    reagents_spectra: list of Spectrum objects
+        A list of reagents' spectra (both substrates and products) present in the mixture.
+    MTD: Maximum Transport Distance, float
+        Signal from mixture's spectrum will be transported up to this distance when estimating
+        reagents' proportions. This parameter is interpreted as denoising penalty for mixture.
+        To disable denoising, set this parameter to large value (for example 1000). Default is 0.1. 
+    MDC: Minimum Detectable Current, float
+        If the spectrum of a reagent encompasses less than
+        this amount of the total signal, it is assumed that this reagent
+        is absent in the spectrum. Default is 1e-8.
+    MMD: Maximum Mode Distance, float
+        If there is no mixture's peak within this distance from the
+        highest peak of spectrum of a reagent,
+        it is assumed that this reagent is absent in the spectrum.
+        Setting this value to -1 disables filtering. Default is -1.
+    max_reruns: int
+        Due to numerical errors, some partial results may be inaccurate.
+        If this is detected, then those results are recomputed for a maximal number of times
+        given by this parameter. Default is 3.
+    verbose: bool
+        Print diagnostic messages? Default is False.
+    MTD_th: Maximum Transport Distance for reagents' spectra, float
+        If presence of noise in reagents' spectra is not expected, 
+        then this parameter should be set to None. Otherwise, set its value to some positive real number.
+        Signal from reagents' spectra will be transported up to this distance 
+        when estimating reagents' proportions. This parameter is interpreted as denoising penalty for reagents. Default is 1.0.
+    solver: 
+        Which solver should be used. We recommend using lp.GUROBI() (note that it requires obtaining a licence).
+        To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True). 
+        If you prefer to use Magnetstein without Gurobi set this argument to solver=LpSolverDefault.
+        Note that using Magnetstein without Gurobi can result in long computation time and, in some cases, incorrect results.
+    what_to_compare:
+        Should the resulting proportions correspond to concentrations or area under the curve? Default is
+        'concentration'. Alternatively can be set to 'area'. This argument is used only for NMR spectra.
+    _____
+    Returns: dict
+        A dictionary with the following entries:
+        - proportions_in_time: List of proportions of reagents' spectra changing in time.
+        If what_to_compare='area' and MTD_th parameter is not equal to None, then the dictionary contains also 
+        the following entries:
+    """
         
         
     # Checking type of spectra
@@ -1062,7 +1125,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, what_to_comp
     proportions_in_time = []
     noise_proportions_in_time = []
     noise = []
-    noise_in_components = []
+    noise_in_reagents = []
     common_horizontal_axis_list = []
 
     
@@ -1078,25 +1141,26 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, what_to_comp
         current_mix.normalize()
         current_horizontal_axis = [conf[0] for conf in current_mix.confs]
 
+
         if i==0:
 
-            estimation = estimate_proportions(current_mix, reagents_spectra, 
-                                                what_to_compare=what_to_compare, 
-                                                solver=solver,
-                                                MTD=MTD, 
-                                                MTD_th=MTD_th,
-                                                warm_start_values=None)
+            estimation = estimate_proportions(current_mix, reagents_spectra, MTD=MTD, MDC=MDC,
+                                                MMD=MMD, max_reruns=max_reruns, verbose=verbose,
+                                                progress=False, MTD_th=MTD_th, solver=solver,
+                                                what_to_compare=what_to_compare,
+                                                warm_start_values=None
+                                                )
 
         else:
 
             if current_horizontal_axis == previous_horizontal_axis:
 
-                estimation = estimate_proportions(current_mix, reagents_spectra, 
-                                                what_to_compare=what_to_compare, 
-                                                solver=solver,
-                                                MTD=MTD, 
-                                                MTD_th=MTD_th,
-                                                warm_start_values=current_warm_start_values)
+                estimation = estimate_proportions(current_mix, reagents_spectra, MTD=MTD, MDC=MDC,
+                                                MMD=MMD, max_reruns=max_reruns, verbose=verbose,
+                                                progress=False, MTD_th=MTD_th, solver=solver,
+                                                what_to_compare=what_to_compare,
+                                                warm_start_values=current_warm_start_values
+                                                )
 
             else:
 
@@ -1105,12 +1169,12 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, what_to_comp
                             ') has different chemical shift axis than the previous one.\
                             Therefore, estimation for this spectrum will be performed \
                             without using information from the previous time point.')
-                estimation = estimate_proportions(current_mix, reagents_spectra, 
-                                                what_to_compare=what_to_compare, 
-                                                solver=solver,
-                                                MTD=MTD, 
-                                                MTD_th=MTD_th,
-                                                warm_start_values=None)
+                estimation = estimate_proportions(current_mix, reagents_spectra, MTD=MTD, MDC=MDC,
+                                                MMD=MMD, max_reruns=max_reruns, verbose=verbose,
+                                                progress=False, MTD_th=MTD_th, solver=solver,
+                                                what_to_compare=what_to_compare,
+                                                warm_start_values=None
+                                                )
 
 
         previous_horizontal_axis = current_horizontal_axis
@@ -1118,7 +1182,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, what_to_comp
         proportions_in_time.append(estimation['proportions'])
         noise_proportions_in_time.append(estimation['proportion_of_noise_in_components'])
         noise.append(estimation['noise'])
-        noise_in_components.append(estimation['noise_in_components'])
+        noise_in_reagents.append(estimation['noise_in_components'])
         common_horizontal_axis_list.append(estimation['common_horizontal_axis'])
 
         current_warm_start_values = estimation['output_warm_start_values']
@@ -1132,6 +1196,6 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, what_to_comp
     
     return {'proportions_in_time' : proportions_in_time,
             'noise_in_mixture_in_time' : noise, 
-           'noise_in_components_in_time' : noise_in_components, 
-            'proportion_of_noise_in_components_in_time': noise_proportions_in_time,
+           'noise_in_reagents_in_time' : noise_in_reagents, 
+            'proportion_of_noise_in_reagents_in_time': noise_proportions_in_time,
            'common_horizontal_axis_in_time' : common_horizontal_axis_list}
