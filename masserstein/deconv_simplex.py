@@ -52,6 +52,12 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
                 To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
+            warm_start_values:
+                List of tuples with variable as the first element and value of the variable as the second element.
+                Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
+                You can extract these values from the previous run of the function using 'output_warm_start_values' key.
+                Important note: if you want to use this argument, you need to set warm_start=True for the used solver.
+                For example: lp.GUROBI(warm_start=True).
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -60,6 +66,9 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
             - trash: Amount of noise in the consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
+            - output_warm_start_values: List of tuples with variable as the first element and optimal value of the variable as the second element.
+                These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
+                obtained in the current run.
         """
         start = time()
         exp_confs = exp_sp.confs.copy()
@@ -121,6 +130,21 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
         #program.writeLP('WassersteinL1.lp')
         if not quiet:
                 print("Starting solver")
+
+        if warm_start_values is not None and len(warm_start_values) == len(program.variables()):
+            warm_start_values = dict(warm_start_values)
+            for var in program.variables():
+                try:
+                    var.setInitialValue(warm_start_values[str(var)])
+                except ValueError:
+                    pass
+        else:
+            if not quiet:
+                print('Current mixture spectrum (' + '+str(i)' + \
+                        ') has different chemical shift axis than the previous one.\
+                        Therefore, estimation for this spectrum will be performed \
+                        without using information from the previous time point.')
+
         LpSolverDefault.msg = not quiet
         program.solve(solver = solver)
         end = time()
@@ -169,6 +193,12 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
                 To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
+            warm_start_values:
+                List of tuples with variable as the first element and value of the variable as the second element.
+                Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
+                You can extract these values from the previous run of the function using 'output_warm_start_values' key.
+                Important note: if you want to use this argument, you need to set warm_start=True for the used solver.
+                For example: lp.GUROBI(warm_start=True).
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -177,6 +207,9 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
             - trash: Amount of noise in the consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
+            - output_warm_start_values: List of tuples with variable as the first element and optimal value of the variable as the second element.
+                These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
+                obtained in the current run.
         """
 
         start = time()
@@ -238,6 +271,21 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         #program.writeLP('WassersteinL1.lp')
         if not quiet:
                 print("Starting solver")
+
+        if warm_start_values is not None and len(warm_start_values) == len(program.variables()):
+            warm_start_values = dict(warm_start_values)
+            for var in program.variables():
+                try:
+                    var.setInitialValue(warm_start_values[str(var)])
+                except ValueError:
+                    pass
+        else:
+            if not quiet:
+                print('Current mixture spectrum (' + '+str(i)' + \
+                        ') has different chemical shift axis than the previous one.\
+                        Therefore, estimation for this spectrum will be performed \
+                        without using information from the previous time point.')
+
         LpSolverDefault.msg = not quiet
         program.solve(solver = solver)
         end = time()
@@ -290,6 +338,12 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
                 To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
+            warm_start_values:
+                List of tuples with variable as the first element and value of the variable as the second element.
+                Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
+                You can extract these values from the previous run of the function using 'output_warm_start_values' key.
+                Important note: if you want to use this argument, you need to set warm_start=True for the used solver.
+                For example: lp.GUROBI(warm_start=True).
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -303,6 +357,9 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             - status: Status of the linear program.
             - common horizontal axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' 
             spectra in a sorted list. 
+            - output_warm_start_values: List of tuples with variable as the first element and optimal value of the variable as the second element.
+                These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
+                obtained in the current run.
         """
 
         start = time()
@@ -388,6 +445,20 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         if not quiet:
                 print("Starting solver")
 
+        if warm_start_values is not None and len(warm_start_values) == len(program.variables()):
+            warm_start_values = dict(warm_start_values)
+            for var in program.variables():
+                try:
+                    var.setInitialValue(warm_start_values[str(var)])
+                except ValueError:
+                    pass
+        else:
+            if not quiet:
+                print('Current mixture spectrum (' + '+str(i)' + \
+                        ') has different chemical shift axis than the previous one.\
+                        Therefore, estimation for this spectrum will be performed \
+                        without using information from the previous time point.')
+
         #Solving
         LpSolverDefault.msg = not quiet
         program.solve(solver = solver)
@@ -441,6 +512,12 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
                 To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
+            warm_start_values:
+                List of tuples with variable as the first element and value of the variable as the second element.
+                Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
+                You can extract these values from the previous run of the function using 'output_warm_start_values' key.
+                Important note: if you want to use this argument, you need to set warm_start=True for the used solver.
+                For example: lp.GUROBI(warm_start=True).
         
         _____
         Returns: dict
@@ -454,6 +531,9 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
             - common horizontal axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' spectra in a sorted list. 
+            - output_warm_start_values: List of tuples with variable as the first element and optimal value of the variable as the second element.
+                These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
+                obtained in the current run.
         """
 
         start = time()
