@@ -1022,9 +1022,9 @@ Please check the deconvolution results and consider reporting this warning to th
 
 
 
-def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.1, MDC=1e-8,
+def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC=1e-8,
                                 MMD=-1, max_reruns=3, verbose=False,
-                                MTD_th=1.0, solver=lp.GUROBI(msg=False, warmStart=True),
+                                MTD_th=0.5, solver=lp.GUROBI(msg=False, warmStart=True),
                                 what_to_compare='area'):
 
     """
