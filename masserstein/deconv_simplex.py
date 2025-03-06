@@ -802,6 +802,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             scaling_factor = 1.0/math.fsum(v[1] for v in q_confs)
             q_confs = [(v[0], v[1]*scaling_factor) for v in q_confs]
 
+        assert abs(sum(x[1] for x in q_confs) - 1.) < 1e-08, "Component's spectrum is not normalized."
+
         if not nmr:
             assert all(x[0] >= 0 for x in q.confs), "Component's spectrum %i has negative masses!" %i
             preprocessed_query.append(Spectrum(confs=q_confs))
@@ -1116,7 +1118,8 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
 
     else:
         print('Cannot retrieve spectra of mixtures from mixture_in_time.\
-                Make sure that provided object is either a list of Spectum objects or numpy.ndarray.')
+                \n Make sure that provided object is either a list of Spectum objects or numpy.ndarray.')
+        return
 
 
     
@@ -1132,7 +1135,6 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
     # Estimation
 
     for i, mix in enumerate(mixture_in_time_list):
-
         if verbose:
             print('Analyzing timepoint '+str(i)+'.\n')
 
