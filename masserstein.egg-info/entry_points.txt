@@ -1,0 +1,3 @@
+[console_scripts]
+WSDeconv = masserstein.WSDeconv:main
+WSDistance = masserstein.WSDistance:main

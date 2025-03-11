@@ -1,0 +1,29 @@
+Metadata-Version: 2.1
+Name: masserstein
+Version: 1.0.0
+Summary: A library for analysis of Mass Spectrometry data using the Wasserstein metric
+Keywords: mass spectrometry spectral deconvolution
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: License :: OSI Approved :: MIT License
+Requires-Python: >2.7, >=3.6, <4
+License-File: LICENSE
+Requires-Dist: IsoSpecPy
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: pulp
+Requires-Dist: tqdm
+Provides-Extra: graphics
+Requires-Dist: matplotlib; extra == "graphics"
