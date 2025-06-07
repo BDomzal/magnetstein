@@ -268,5 +268,60 @@ def visualize_spectra(
     # Save or show
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        
+
+    plt.show()
+
+def visualize_stacked_spectra(spectra, colors=None, labels=None,
+                         scale_factor=1.2, figsize=(10, 6), xlim=None, title=None):
+    """
+    Plot stacked NMR spectra with vertical offsets based on each spectrum's max intensity.
+    Spectra must have a `.confs` attribute with (ppm, intensity) pairs.
+
+    Args:
+        spectra (list): List of spectral objects with `.confs` attribute.
+        colors (list of str, optional): Plot color per spectrum.
+        labels (list of str, optional): Labels for the legend.
+        scale_factor (float): Vertical spacing multiplier between spectra.
+        figsize (tuple): Size of the matplotlib figure.
+        xlim (tuple, optional): x-axis (ppm) limits.
+        title (str, optional): Plot title.
+
+    Returns:
+        None
+    """
+    num_spectra = len(spectra)
+    if colors is None:
+        colors = plt.cm.tab10.colors[:num_spectra]
+
+    # Extract max intensities for spacing
+    max_intensities = [max(pt[1] for pt in sp.confs) for sp in spectra]
+    offsets = np.cumsum([0] + [m * scale_factor for m in max_intensities[:-1]])
+
+    plt.figure(figsize=figsize)
+
+    for i, sp in enumerate(spectra):
+        # Extract and sort ppm and intensity
+        ppm, intensity = zip(*sp.confs)
+        ppm, intensity = np.array(ppm), np.array(intensity)
+        sort_idx = np.argsort(ppm)
+        ppm_sorted = ppm[sort_idx]
+        intensity_sorted = intensity[sort_idx]
+
+        plt.plot(ppm_sorted, intensity_sorted + offsets[i],
+                 color=colors[i],
+                 lw=1.5,
+                 label=labels[i] if labels else None)
+
+    plt.xlabel("¹H, ppm", fontsize=12)
+    plt.yticks([])  # Hide y-axis ticks
+    plt.gca().invert_xaxis()
+
+    if xlim:
+        plt.xlim(xlim)
+    if labels:
+        plt.legend(loc='upper right', fontsize=10)
+    if title:
+        plt.title(title, fontsize=14)
+
+    plt.tight_layout()
     plt.show()
