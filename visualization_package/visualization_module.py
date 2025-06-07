@@ -190,4 +190,83 @@ def visualize_transport_distance_distribution(
     plt.show()
 
 
+def visualize_spectra(
+    mixture,
+    spectra_object,
+    probs,
+    components_names,
+    window,
+    shift=None,
+    cumulate=True,
+    figsize=(15, 9),
+    title="Spectral Decomposition",
+    save_path=None
+):
+    """
+    Visualizes the spectral decomposition of a mixture into its component spectra.
 
+    Supports both cumulative plotting using `fill_between` and standard stack plotting,
+    with optional spectral shifting and moving average smoothing.
+
+    Args:
+        mixture: An object representing the mixture spectrum, with a `.confs` attribute,
+                 where each element is a (x, y) tuple.
+        spectra_object (list): List of component spectrum objects, each with `.confs`.
+        probs (list of float): Scaling factors (e.g., probabilities or weights) for each component.
+        components_names (list of str): Names of each component for the legend.
+        window (int): Window size for moving average smoothing.
+        shift (list of float, optional): Horizontal shift (e.g., ppm offset) for each component.
+        cumulate (bool): If True, plot a cumulative filled spectrum using `fill_between`.
+                         If False, plot standard stacked spectra using `stackplot`.
+        figsize (tuple of int): Figure size in inches.
+        title (str): Title of the plot.
+
+    Returns:
+        None
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+
+    if cumulate:
+        cumulative = None
+        for i, spectrum in enumerate(spectra_object):
+            # Prepare x and y data
+            x = np.array([pt[0] + shift[i] if shift else pt[0] for pt in spectrum.confs])
+            y = np.array([probs[i] * pt[1] for pt in spectrum.confs])
+            y_smoothed = np.convolve(y, np.ones(window) / window, mode='same')
+
+            # Sort for proper plotting
+            sort_idx = np.argsort(x)
+            x_sorted = x[sort_idx]
+            y_sorted = y_smoothed[sort_idx]
+
+            base = np.zeros_like(y_sorted) if cumulative is None else cumulative
+            ax.fill_between(x_sorted, base, base + y_sorted, label=components_names[i])
+            cumulative = base + y_sorted
+
+    else:
+        for i, spectrum in enumerate(spectra_object):
+            x = [pt[0] + shift[i] if shift else pt[0] for pt in spectrum.confs]
+            y = [probs[i] * pt[1] for pt in spectrum.confs]
+            y_smoothed = np.convolve(y, np.ones(window) / window, mode='same')
+            ax.stackplot(x, y_smoothed, labels=[components_names[i]])
+
+    # Plot the original mixture spectrum on top
+    mix_x = np.array([pt[0] for pt in mixture.confs])
+    mix_y = np.array([pt[1] for pt in mixture.confs])
+    mix_y_smoothed = np.convolve(mix_y, np.ones(window) / window, mode='same')
+
+    sort_idx = np.argsort(mix_x)
+    ax.plot(mix_x[sort_idx], mix_y_smoothed[sort_idx], label="Mixture", color='black', linewidth=2)
+
+    # Final plot formatting
+    ax.legend()
+    ax.set_title(title)
+    ax.set_xlabel("Chemical shift (ppm)")
+    ax.set_ylabel("Intensity")
+    ax.invert_xaxis()
+
+    # Save or show
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        
+    plt.show()
