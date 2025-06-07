@@ -115,3 +115,79 @@ def visualize_transport_plan(
     plt.show()
 
 
+def visualize_transport_distance_distribution(
+    distances,
+    component_kappa=None,
+    mixture_kappa=None,
+    component_label="Kappa components",
+    mixture_label="Kappa mixture",
+    component_color="hotpink",
+    mixture_color="cornflowerblue",
+    bins=100,
+    figsize=(8, 6),
+    title="Transport Distance Distribution",
+    save_path=None
+):
+    """
+    Plots a histogram of transport distances with optional markers for specific kappa values.
+
+    Args:
+        distances (list or np.ndarray): List of transport distances.
+        component_kappa (float, optional): Value for a component kappa to highlight.
+        mixture_kappa (float, optional): Value for a mixture kappa to highlight.
+        component_label (str): Label for the component kappa line.
+        mixture_label (str): Label for the mixture kappa line.
+        component_color (str): Color for the component kappa markers.
+        mixture_color (str): Color for the mixture kappa markers.
+        bins (int): Number of histogram bins.
+        figsize (tuple): Size of the figure.
+        title (str): Title of the plot.
+        save_path (str, optional): Path to save the plot. If None, plot is not saved.
+
+    Returns:
+        None
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+
+    if component_kappa is not None:
+        y_comp = distances.get(component_kappa, 0)
+        distances[component_kappa] = 0
+
+    if mixture_kappa is not None:
+        y_mix = distances.get(mixture_kappa, 0)
+        distances[mixture_kappa] = 0
+
+    counts, bins_, _ = ax.hist(distances, bins=bins, color='gray', edgecolor='black')
+
+    bin_width = bins_[1] - bins_[0]
+
+    # Highlight component kappa
+    if component_kappa is not None:
+        ax.bar(component_kappa, y_comp, width=bin_width,
+               color=component_color, edgecolor=component_color, zorder=5)
+        ax.axvline(component_kappa, color=component_color, linestyle='--', linewidth=1, zorder=6)
+        ax.text(component_kappa, max(counts) * 0.5, component_label,
+                rotation=90, color=component_color, va='bottom', ha='left', fontsize=12)
+
+    # Highlight mixture kappa
+    if mixture_kappa is not None:
+        ax.bar(mixture_kappa, y_mix, width=bin_width,
+               color=mixture_color, edgecolor=mixture_color, zorder=5)
+        ax.axvline(mixture_kappa, color=mixture_color, linestyle='--', linewidth=1, zorder=6)
+        ax.text(mixture_kappa, max(counts) * 0.5, mixture_label,
+                rotation=90, color=mixture_color, va='bottom', ha='right', fontsize=12)
+
+    # Axis and labels
+    ax.set_title(title, fontsize=14)
+    ax.set_xlabel("Transport distance, ppm", fontsize=14)
+    ax.set_ylabel("Amount of signal transported", fontsize=14)
+    ax.tick_params(labelsize=12)
+
+    # Save or show
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+
+    plt.show()
+
+
+
