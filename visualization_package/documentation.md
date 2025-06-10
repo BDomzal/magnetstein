@@ -127,3 +127,19 @@ visualize_transport_plan(transport_df, mix_confs, wsom_confs, experiment_name=No
         Returns:
             None
 ```
+```
+plot_removed_noise(estimation, mix, linewidth=0.5)
+        Plots an NMR mixture spectrum and highlights the estimated noise that was removed.
+
+        Visualizes the full mixture spectrum and shades the region corresponding to the removed noise,
+        as estimated by `estimate_proportions()`.
+
+        Args:
+            estimation (dict): Output dictionary from `estimate_proportions()` containing a "noise" key,
+                               which holds the noise intensity values for each spectral point.
+            mix: NMRSpectrum object representing the full mixture, with a `.confs` attribute of (ppm, intensity) tuples.
+            linewidth (float): Line width for the plotted mixture spectrum.
+
+        Returns:
+            None
+```

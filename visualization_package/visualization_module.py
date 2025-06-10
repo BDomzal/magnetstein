@@ -325,3 +325,44 @@ def visualize_stacked_spectra(spectra, colors=None, labels=None,
 
     plt.tight_layout()
     plt.show()
+
+def plot_removed_noise(estimation, mix, linewidth=0.5):
+    """
+    Plot the mixture spectrum and highlight the removed noise.
+
+    Args:
+        estimation (dict): output from estimate_proportions() containing key "noise" with noise values per point
+        mix: NMRSpectrum describing the full mixture
+        linewidth (float): line width for the mixture plot
+    """
+    # prepare data
+    x = [pt[0] for pt in mix.confs]
+    y = [pt[1] for pt in mix.confs]
+    noise = estimation["noise"]
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+
+    # highlight removed noise
+    ax.fill_between(
+        x,
+        [yi - ni for yi, ni in zip(y, noise)],
+        y,
+        label="noise"
+    )
+
+    # plot mixture
+    ax.plot(
+        x,
+        y,
+        linestyle="-",
+        linewidth=linewidth,
+        color="black",
+        label="mixture"
+    )
+
+    # NMR convention: x axis inverted
+    ax.invert_xaxis()
+
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
