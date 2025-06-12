@@ -54,10 +54,11 @@ def visualize_transport_plan(
     colors[0] = [1, 1, 1, 1]
     custom_cmap = LinearSegmentedColormap.from_list('custom_cmap', colors)
 
-    # Heatmap subplot
+    # # Heatmap subplot
     ax_heatmap = plt.subplot(gs[1, 1])
     y_idx, x_idx = np.nonzero(transport_df.values)
     values = transport_df.values[y_idx, x_idx]
+
 
     sc = ax_heatmap.scatter(
         x_idx, y_idx,

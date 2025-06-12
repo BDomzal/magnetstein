@@ -1,0 +1,26 @@
+
+components_dictionary = {'overlapping_and_intensity_differnce': ['Benzyl benzoate', 'Anisaldehyde'],
+                        'perfumes_and_absent_components': ['Isopropyl myristate', 'Benzyl benzoate', 'Alpha pinene', 'Limonene'],
+                        'shim': ['Lactate', 'Alanine', 'Creatine', 'Creatinine', 'Choline chloride']}
+
+protons_dictionary = {'overlapping_and_intensity_differnce': [12, 8],
+                        'perfumes_and_absent_components': [34, 12, 16, 16],
+                        'shim': [4, 4, 5, 5, 13]}
+
+delimiter = {
+            'overlapping_and_intensity_differnce': ',',
+            'perfumes_and_absent_components': ',',
+            'shim': ','
+            }
+
+kappa_mixture = {
+                'overlapping_and_intensity_differnce': 0.22,
+                'perfumes_and_absent_components': 0.22,
+                'shim': 0.22,
+                }
+
+kappa_components = {
+                'overlapping_and_intensity_differnce': 0.25,
+                'perfumes_and_absent_components': 0.25,
+                'shim': 0.25,
+                }
