@@ -106,7 +106,7 @@ def visualize_transport_plan(
         cbar.set_label('Amount of transport', rotation=270, size=12)
 
     # Save figure
-    if save and figures_path and experiment_name and lower_lim is not None and upper_lim is not None:
+    if save and figures_path is not None and experiment_name is not None and lower_lim is not None and upper_lim is not None:
         filename = f"{experiment_name}_region_{lower_lim}_{upper_lim}"
         if variant is not None:
             filename = f"{experiment_name}_variant_{variant+1}_region_{lower_lim}_{upper_lim}"
@@ -132,13 +132,13 @@ def visualize_transport_distance_distribution(
     Plots a histogram of transport distances with optional markers for specific kappa values.
 
     Args:
-        distances (list or np.ndarray): List of transport distances.
+        distances (dict): Dictionary of transport distances with noise markers.
         component_kappa (float, optional): Value for a component kappa to highlight.
         mixture_kappa (float, optional): Value for a mixture kappa to highlight.
         component_label (str): Label for the component kappa line.
         mixture_label (str): Label for the mixture kappa line.
-        component_color (str): Color for the component kappa markers.
-        mixture_color (str): Color for the mixture kappa markers.
+        component_color (str): Color for the component kappa markers. Color should be in Matplotlib CSS Colors domain.
+        mixture_color (str): Color for the mixture kappa markers. Color should be in Matplotlib CSS Colors domain.
         bins (int): Number of histogram bins.
         figsize (tuple): Size of the figure.
         title (str): Title of the plot.
@@ -184,7 +184,7 @@ def visualize_transport_distance_distribution(
     ax.tick_params(labelsize=12)
 
     # Save or show
-    if save_path:
+    if save_path is not None:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
 
     plt.show()
@@ -209,9 +209,9 @@ def visualize_spectra(
     with optional spectral shifting and moving average smoothing.
 
     Args:
-        mixture: An object representing the mixture spectrum, with a `.confs` attribute,
-                 where each element is a (x, y) tuple.
-        spectra_object (list): List of component spectrum objects, each with `.confs`.
+        mixture (NMRSpectrum): An object representing the mixture spectrum, with a `.confs` attribute,
+                 where each element is a (ppm, intensity) tuple.
+        spectra_object (list of NMRSpectrum): List of component spectrum objects, each with `.confs`.
         probs (list of float): Scaling factors (e.g., probabilities or weights) for each component.
         components_names (list of str): Names of each component for the legend.
         window (int): Window size for moving average smoothing.
@@ -266,10 +266,11 @@ def visualize_spectra(
     ax.invert_xaxis()
 
     # Save or show
-    if save_path:
+    if save_path is not None:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
 
     plt.show()
+
 
 def visualize_stacked_spectra(spectra, colors=None, labels=None,
                          scale_factor=1.2, figsize=(10, 6), xlim=None, title=None):
@@ -278,8 +279,8 @@ def visualize_stacked_spectra(spectra, colors=None, labels=None,
     Spectra must have a `.confs` attribute with (ppm, intensity) pairs.
 
     Args:
-        spectra (list): List of spectral objects with `.confs` attribute.
-        colors (list of str, optional): Plot color per spectrum.
+        spectra (list of NMRSpectrum): List of spectral objects with `.confs` attribute.
+        colors (list of str, optional): Plot color per spectrum. Colors should be in Matplotlib CSS Colors domain.
         labels (list of str, optional): Labels for the legend.
         scale_factor (float): Vertical spacing multiplier between spectra.
         figsize (tuple): Size of the matplotlib figure.
@@ -312,7 +313,7 @@ def visualize_stacked_spectra(spectra, colors=None, labels=None,
                  lw=1.5,
                  label=labels[i] if labels else None)
 
-    plt.xlabel("¹H, ppm", fontsize=12)
+    plt.xlabel("Chemical shift (ppm)", fontsize=12)
     plt.yticks([])  # Hide y-axis ticks
     plt.gca().invert_xaxis()
 
@@ -326,43 +327,53 @@ def visualize_stacked_spectra(spectra, colors=None, labels=None,
     plt.tight_layout()
     plt.show()
 
-def plot_removed_noise(estimation, mix, linewidth=0.5):
+def plot_removed_noise(spectrum, noise, title="Noise Removed", color='gray', alpha=0.5, linewidth=0.75):
     """
-    Plot the mixture spectrum and highlight the removed noise.
+    Plots the original spectrum and highlights the removed noise as a filled region.
 
     Args:
-        estimation (dict): output from estimate_proportions() containing key "noise" with noise values per point
-        mix: NMRSpectrum describing the full mixture
-        linewidth (float): line width for the mixture plot
+        spectrum (NMRSpectrum): Original spectrum object with `.confs` (ppm, intensity).
+        noise (list or np.ndarray): Noise intensities removed (same length as spectrum).
+        title (str): Plot title.
+        color (str): Fill color for noise. Color should be in Matplotlib CSS Colors domain.
+        alpha (float): Transparency for the noise fill.
+        linewidth (float): Line width for the spectrum plot.
+
+    Returns:
+        None
     """
-    # prepare data
-    x = [pt[0] for pt in mix.confs]
-    y = [pt[1] for pt in mix.confs]
-    noise = estimation["noise"]
+
+    x = [pt[0] for pt in spectrum.confs]
+    y = [pt[1] for pt in spectrum.confs]
 
     fig, ax = plt.subplots(figsize=(10, 4))
 
-    # highlight removed noise
+    # Highlight removed noise
     ax.fill_between(
         x,
         [yi - ni for yi, ni in zip(y, noise)],
         y,
-        label="noise"
+        color=color,
+        alpha=alpha,
+        label="Noise removed"
     )
 
-    # plot mixture
+    # Plot mixture
     ax.plot(
         x,
         y,
         linestyle="-",
         linewidth=linewidth,
         color="black",
-        label="mixture"
+        label="Original spectrum"
     )
 
     # NMR convention: x axis inverted
     ax.invert_xaxis()
 
-    ax.legend()
+    plt.xlabel("Chemical shift (ppm)")
+    plt.ylabel("Intensity")
+    plt.title(title)
+    plt.legend()
     plt.tight_layout()
     plt.show()

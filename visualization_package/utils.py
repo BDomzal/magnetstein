@@ -10,7 +10,7 @@ def shift_and_mix(spectra, shifts, probs):
     Shifts and scales individual spectra, then mixes them into a single NMR spectrum.
 
     Args:
-        spectra (list): List of spectrum-like objects, each with a `.confs` attribute containing (ppm, intensity) tuples.
+        spectra (list of NMRSpectrum): List of spectrum-like objects, each with a `.confs` attribute containing (ppm, intensity) tuples.
         shifts (list): List of float shifts to apply to each spectrum (e.g., in ppm).
         probs (list): List of float scaling factors (e.g., estimated proportions) to apply to intensities of each spectrum.
 
