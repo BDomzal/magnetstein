@@ -89,6 +89,8 @@ def retrieve_transport_plan(mix, spectra, interesting_region, kappa_mixture, kap
         mix_confs (np.ndarray): Mixture spectrum in the region of interest.
         wsom_confs (np.ndarray): Weighted sum of components in the region.
         distances (dict): Dictionary of transport distances with noise markers.
+        sum_noise_in_mix (float): Sum of noise in the mixture.
+        sum_noise_in_components (float): Sum of noise in the components.
     """
     # Estimate proportions using optimal transport
     estimation = estimate_proportions(
@@ -159,21 +161,13 @@ def retrieve_transport_plan(mix, spectra, interesting_region, kappa_mixture, kap
 
     # Fill transport matrix
     for from_ppm, to_ppm, mass in transport_plan:
-        if mass > 0 and from_ppm in all_ppm and to_ppm in all_ppm:
+        if mass > 1e-6 and from_ppm in all_ppm and to_ppm in all_ppm:
             if log:
                 value = -np.log10(mass)
             else:
                 value = mass
             transport_df.loc[from_ppm, to_ppm] = value
             distances[abs(from_ppm - to_ppm)] = distances.get(abs(from_ppm - to_ppm), 0) + value
-
-    # Add noise terms to distances
-    if log:
-        distances[kappa_mixture] = -np.log10(noise_in_mix)
-        distances[kappa_components] = -np.log10(noise_in_components)
-    else:
-        distances[kappa_mixture] = noise_in_mix
-        distances[kappa_components] = noise_in_components
 
     # Crop mixture and component spectra to region of interest
     mix_confs = np.array(mix.confs)
@@ -184,4 +178,7 @@ def retrieve_transport_plan(mix, spectra, interesting_region, kappa_mixture, kap
     wsom_confs = wsom_confs[(wsom_confs[:, 0] > lower_lim) & (wsom_confs[:, 0] < upper_lim)]
     wsom_confs = np.flip(wsom_confs, axis=0)
 
-    return transport_df, mix_confs, wsom_confs, distances
+    sum_noise_in_mix = sum(noise_in_mix)
+    sum_noise_in_components = sum(noise_in_components)
+
+    return transport_df, mix_confs, wsom_confs, distances, sum_noise_in_mix, sum_noise_in_components

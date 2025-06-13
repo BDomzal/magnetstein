@@ -56,9 +56,8 @@ def visualize_transport_plan(
 
     # # Heatmap subplot
     ax_heatmap = plt.subplot(gs[1, 1])
-    y_idx, x_idx = np.nonzero(transport_df.values)
-    values = transport_df.values[y_idx, x_idx]
-
+    x_idx, y_idx = np.nonzero(transport_df.values)
+    values = transport_df.values[x_idx, y_idx]
 
     sc = ax_heatmap.scatter(
         x_idx, y_idx,
@@ -115,8 +114,9 @@ def visualize_transport_plan(
 
     plt.show()
 
-
 def visualize_transport_distance_distribution(
+    sum_noise_in_mix,
+    sum_noise_in_components,
     distances,
     component_kappa=None,
     mixture_kappa=None,
@@ -124,15 +124,16 @@ def visualize_transport_distance_distribution(
     mixture_label="Kappa mixture",
     component_color="hotpink",
     mixture_color="cornflowerblue",
-    bins=100,
     figsize=(8, 6),
     title="Transport Distance Distribution",
     save_path=None
 ):
     """
-    Plots a histogram of transport distances with optional markers for specific kappa values.
+    Plots a histogram-like plot of transport distances with optional markers for specific kappa values.
 
     Args:
+        sum_noise_in_mix (float): Sum of noise in the mixture.
+        sum_noise_in_components (float): Sum of noise in the components.
         distances (dict): Dictionary of transport distances with noise markers.
         component_kappa (float, optional): Value for a component kappa to highlight.
         mixture_kappa (float, optional): Value for a mixture kappa to highlight.
@@ -148,46 +149,56 @@ def visualize_transport_distance_distribution(
     Returns:
         None
     """
-    fig, ax = plt.subplots(figsize=figsize)
+    _, ax = plt.subplots(figsize=figsize)
 
+    # Sort for plotting
+    sum_w = sum(distances.values()) + sum_noise_in_mix + sum_noise_in_components
+    distances = {k:val/sum_w for k,val in distances.items()}
+    sorted_items = sorted(distances.items())
+    xs, ys = zip(*sorted_items)
+
+    low, high = xs[0], xs[-1]
+    if high < component_kappa:
+        high = component_kappa
+    if high < mixture_kappa:
+        high = mixture_kappa
+    size = (high - low)
+    frame = 0.05 * size + 1e-16
+    low, high = low - frame, high + frame
+
+    # Auto bar width
+    bar_width = size / 100
+
+    # Plot bars
+    ax.bar(xs, ys, width=bar_width, color='gray', edgecolor='black', zorder=1)
+
+    # Markers
     if component_kappa is not None:
-        y_comp = distances.get(component_kappa, 0)
-        distances[component_kappa] = 0
-
-    if mixture_kappa is not None:
-        y_mix = distances.get(mixture_kappa, 0)
-        distances[mixture_kappa] = 0
-
-    counts, bins_, _ = ax.hist(distances, bins=bins, color='gray', edgecolor='black')
-
-    bin_width = bins_[1] - bins_[0]
-
-    # Highlight component kappa
-    if component_kappa is not None:
-        ax.bar(component_kappa, y_comp, width=bin_width,
-               color=component_color, edgecolor=component_color, zorder=5)
-        ax.axvline(component_kappa, color=component_color, linestyle='--', linewidth=1, zorder=6)
-        ax.text(component_kappa, max(counts) * 0.5, component_label,
+        ax.axvline(component_kappa, color=component_color, linestyle='--', linewidth=1.5, zorder=3)
+        ax.bar(component_kappa, sum_noise_in_components/sum_w,
+               width=bar_width, color=component_color, edgecolor=component_color, zorder=4)
+        ax.text(component_kappa, 0.5, component_label,
                 rotation=90, color=component_color, va='bottom', ha='left', fontsize=12)
 
-    # Highlight mixture kappa
     if mixture_kappa is not None:
-        ax.bar(mixture_kappa, y_mix, width=bin_width,
-               color=mixture_color, edgecolor=mixture_color, zorder=5)
-        ax.axvline(mixture_kappa, color=mixture_color, linestyle='--', linewidth=1, zorder=6)
-        ax.text(mixture_kappa, max(counts) * 0.5, mixture_label,
+        ax.axvline(mixture_kappa, color=mixture_color, linestyle='--', linewidth=1.5, zorder=3)
+        ax.bar(mixture_kappa, sum_noise_in_mix/sum_w,
+               width=bar_width, color=mixture_color, edgecolor=mixture_color, zorder=4)
+        ax.text(mixture_kappa, 0.5, mixture_label,
                 rotation=90, color=mixture_color, va='bottom', ha='right', fontsize=12)
 
-    # Axis and labels
+    # Fixed axis limits
+    ax.set_xlim(low, high)
+    ax.set_ylim(0, 1)
+
+    # Labels and styling
     ax.set_title(title, fontsize=14)
     ax.set_xlabel("Transport distance, ppm", fontsize=14)
     ax.set_ylabel("Amount of signal transported", fontsize=14)
     ax.tick_params(labelsize=12)
 
-    # Save or show
-    if save_path is not None:
+    if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-
     plt.show()
 
 
