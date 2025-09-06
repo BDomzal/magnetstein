@@ -118,8 +118,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
         for j in range(k):
                 thr_vec = intensity_generator(thr_confs[j], common_horizontal_axis)
                 program += lp.lpSum(v*x for v, x in zip(thr_vec, lpVars) if v > 0.) <= 0, 'P%i' % (j+1)
-        if not quiet:
-                print('tsk tsk')
+
         ##    for i in range(n-1):
         ##        program += lpVars[i]-lpVars[i+1] <= interval_lengths[i], 'EpsPlus %i' % (i+1)
         ##        program += lpVars[i] - lpVars[i+1] >=  -interval_lengths[i], 'EpsMinus %i' % (i+1)
@@ -141,7 +140,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
                     pass
         else:
             if not quiet:
-                print('Current mixture spectrum (' + '+str(i)' + \
+                print('Warm start values are None or current mixture spectrum (' + str(i) + \
                         ') has different chemical shift axis than the previous one.\
                         Therefore, estimation for this spectrum will be performed \
                         without using information from the previous time point.')
@@ -260,8 +259,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         for j in range(k):
                 thr_vec = intensity_generator(thr_confs[j], common_horizontal_axis)
                 program += lp.lpSum(v*x for v, x in zip(thr_vec, lpVars) if v > 0.) <= 0, 'P%i' % (j+1)
-        if not quiet:
-                print('tsk tsk')
+
         for i in range(n):
                 program += lpVars[i] <= penalty, 'g%i' % (i+1)
         for i in range(n-1):
@@ -282,7 +280,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
                     pass
         else:
             if not quiet:
-                print('Current mixture spectrum (' + '+str(i)' + \
+                print('Warm start values are None or current mixture spectrum (' + str(i) + \
                         ') has different chemical shift axis than the previous one.\
                         Therefore, estimation for this spectrum will be performed \
                         without using information from the previous time point.')
@@ -424,9 +422,6 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         program += lp.lpSum(v*x for v, x in zip(exp_vec, lpVars[:n-1]+[0])).addInPlace(
                                 lp.lpSum(v*x for v, x in zip([0, 1, -1, 0], lpVars[n-1:]))) <= 0, 'p0_prime'
 
-        if not quiet:
-                print('tsk tsk')
-
         for i in range(n-1):
                 program +=  lpVars[i] - lpVars[n-1]  <=  penalty, 'g_%i' % (i+1)
                 program +=  -lpVars[n] - lpVars[i] <= penalty_th, 'g_prime_%i' % (i+1)
@@ -455,7 +450,7 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                     pass
         else:
             if not quiet:
-                print('Current mixture spectrum (' + '+str(i)' + \
+                print('Warm start values are None or current mixture spectrum (' + str(i) + \
                         ') has different chemical shift axis than the previous one.\
                         Therefore, estimation for this spectrum will be performed \
                         without using information from the previous time point.')
@@ -596,9 +591,6 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         exp_vec = intensity_generator(exp_confs, common_horizontal_axis)
         program += lp.lpSum(v*x for v, x in zip(exp_vec, lpVars[:n-1]+[0])).addInPlace(
                             lp.lpSum(v*x for v, x in zip([0, 1, -1, 0], lpVars[n-1:]))) <= penalty_th, 'p0_prime'
-
-        if not quiet:
-                print('tsk tsk')
         
         for i in range(n-1):
                 program +=  lpVars[i] - lpVars[n-1]  <=  0, 'g_%i' % (i+1)
@@ -628,7 +620,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                     pass
         else:
             if not quiet:
-                print('Current mixture spectrum (' + '+str(i)' + \
+                print('Warm start values are None or current mixture spectrum (' + str(i) + \
                         ') has different chemical shift axis than the previous one.\
                         Therefore, estimation for this spectrum will be performed \
                         without using information from the previous time point.')
@@ -674,7 +666,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         The mixture's spectrum.
     query: list of Spectrum objects
         A list of components' spectra (reference spectra).
-    MTD: Maximum Transport Distance, float
+    MTD: Maximum Transport Distance, a.k.a. kappa_mixture, float
         Signal from mixture's spectrum will be transported up to this distance when estimating
         components proportions. This parameter is interpreted as denoising penalty for mixture.
         To disable denoising, set this parameter to large value (for example 1000). Default is 0.25. 
@@ -695,7 +687,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         Print diagnostic messages? Default is False.
     progress: bool
         Whether to display progress bars during work. Default is False.
-    MTD_th: Maximum Transport Distance for components' spectra, float
+    MTD_th: Maximum Transport Distance for components' spectra, a.k.a. kappa_components, a.k.a. kappa_library, float
         If presence of noise in components' spectra is not expected, 
         then this parameter should be set to None. Otherwise, set its value to some positive real number.
         Signal from components' spectra will be transported up to this distance 
@@ -1041,10 +1033,12 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         other columns should contain intensities (those corresponding to the earliest spectrum should be in column 1).
     reagents_spectra: list of Spectrum objects
         A list of reagents' spectra (both substrates and products) present in the mixture.
-    MTD: Maximum Transport Distance, float
-        Signal from mixture's spectrum will be transported up to this distance when estimating
-        reagents' proportions. This parameter is interpreted as denoising penalty for mixture.
-        To disable denoising, set this parameter to large value (for example 1000). Default is 0.1. 
+    MTD: Maximum Transport Distance for reaction mixture, a.k.a. kappa_mixture, float
+        This value can be interpreted as the tolerance threshold for peaks' shift in mixture's spectrum,
+        or as a denoising penalty for the mixture. Signal from mixture's spectrum will be
+        transported up to this distance when estimating reagents' proportions.
+        To disable mixture's denoising, set this parameter to large value (for example 1000).
+        Otherwise, set its value to some positive real number. Default is 0.5.
     MDC: Minimum Detectable Current, float
         If the spectrum of a reagent encompasses less than
         this amount of the total signal, it is assumed that this reagent
@@ -1060,11 +1054,12 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         given by this parameter. Default is 3.
     verbose: bool
         Print diagnostic messages? Default is False.
-    MTD_th: Maximum Transport Distance for reagents' spectra, float
-        If presence of noise in reagents' spectra is not expected, 
-        then this parameter should be set to None. Otherwise, set its value to some positive real number.
-        Signal from reagents' spectra will be transported up to this distance 
-        when estimating reagents' proportions. This parameter is interpreted as denoising penalty for reagents. Default is 1.0.
+    MTD_th: Maximum Transport Distance for reagents, a.k.a. kappa_components, a.k.a. kappa_library, float
+        This value can be interpreted as the tolerance threshold for peaks' shifts in reagents spectra,
+        or as a denoising penalty for the reagents. Signal from reagents' spectra will be
+        transported up to this distance when estimating reagents' proportions.
+        To disable reagents' denoising, set this parameter to large value (for example 1000).
+        Otherwise, set its value to some positive real number. Default is 0.5.
     solver: 
         Which solver should be used. We recommend using lp.GUROBI() (note that it requires obtaining a licence).
         To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True). 
