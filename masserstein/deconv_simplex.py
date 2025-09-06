@@ -9,6 +9,7 @@ from tqdm import tqdm
 from pulp.apis import LpSolverDefault
 from masserstein import misc
 import math
+from copy import deepcopy
 
 
 def intensity_generator(confs, mzaxis):
@@ -1143,12 +1144,13 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         current_mix.normalize()
         current_horizontal_axis = [conf[0] for conf in current_mix.confs]
 
+        init_solver = deepcopy(solver)
 
         if i==0:
 
             estimation = estimate_proportions(current_mix, reagents_spectra, MTD=MTD, MDC=MDC,
                                                 MMD=MMD, max_reruns=max_reruns, verbose=verbose,
-                                                progress=False, MTD_th=MTD_th, solver=solver,
+                                                progress=False, MTD_th=MTD_th, solver=init_solver,
                                                 what_to_compare=what_to_compare,
                                                 warm_start_values=None
                                                 )
@@ -1159,7 +1161,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
 
                 estimation = estimate_proportions(current_mix, reagents_spectra, MTD=MTD, MDC=MDC,
                                                 MMD=MMD, max_reruns=max_reruns, verbose=verbose,
-                                                progress=False, MTD_th=MTD_th, solver=solver,
+                                                progress=False, MTD_th=MTD_th, solver=init_solver,
                                                 what_to_compare=what_to_compare,
                                                 warm_start_values=current_warm_start_values
                                                 )
@@ -1173,7 +1175,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
                             without using information from the previous time point.')
                 estimation = estimate_proportions(current_mix, reagents_spectra, MTD=MTD, MDC=MDC,
                                                 MMD=MMD, max_reruns=max_reruns, verbose=verbose,
-                                                progress=False, MTD_th=MTD_th, solver=solver,
+                                                progress=False, MTD_th=MTD_th, solver=init_solver,
                                                 what_to_compare=what_to_compare,
                                                 warm_start_values=None
                                                 )
@@ -1187,7 +1189,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         noise_in_reagents.append(estimation['noise_in_components'])
         common_horizontal_axis_list.append(estimation['common_horizontal_axis'])
 
-        current_warm_start_values = estimation['output_warm_start_values']
+        current_warm_start_values = deepcopy(estimation['output_warm_start_values'])
 
         if verbose:
 
