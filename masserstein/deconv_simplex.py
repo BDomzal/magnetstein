@@ -58,7 +58,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
                 Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
                 You can extract these values from the previous run of the function using 'output_warm_start_values' key.
                 Important note: if you want to use this argument, you need to turn on warm start for the used solver.
-                For example: lp.GUROBI(warmStart=True).
+                For example: lp.GUROBI(warmStart=True). This is not necessary, but in some cases may speed up the computations.
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -199,7 +199,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
                 Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
                 You can extract these values from the previous run of the function using 'output_warm_start_values' key.
                 Important note: if you want to use this argument, you need to turn on warm start for the used solver.
-                For example: lp.GUROBI(warmStart=True).
+                For example: lp.GUROBI(warmStart=True). This is not necessary, but in some cases may speed up the computations.
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -344,7 +344,7 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
                 You can extract these values from the previous run of the function using 'output_warm_start_values' key.
                 Important note: if you want to use this argument, you need to turn on warm start for the used solver.
-                For example: lp.GUROBI(warmStart=True).
+                For example: lp.GUROBI(warmStart=True). This is not necessary, but in some cases may speed up the computations.
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -515,7 +515,7 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
                 You can extract these values from the previous run of the function using 'output_warm_start_values' key.
                 Important note: if you want to use this argument, you need to turn on warm start for the used solver.
-                For example: lp.GUROBI(warmStart=True).
+                For example: lp.GUROBI(warmStart=True). This is not necessary, but in some cases may speed up the computations.
         
         _____
         Returns: dict
@@ -701,6 +701,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         Note that using Magnetstein with unreliable solver can result in long computation time and, in some cases, incorrect results.
         Important note: if you want the algorithm to utilize the estimation from the previous time point, 
         you need to turn on warm start for the used solver. For example: lp.GUROBI(warmStart=True).
+        This is not necessary, but in some cases may speed up the computations.
     what_to_compare:
         Should the resulting proportions correspond to concentrations or area under the curve? Default is
         'concentration'. Alternatively can be set to 'area'. This argument is used only for NMR spectra.
@@ -1077,6 +1078,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         Note that using Magnetstein with unreliable solver can result in long computation time and, in some cases, incorrect results.
         Important note: if you want the algorithm to utilize the estimation from the previous time points, 
         you need to turn on warm start for the used solver. For example: lp.GUROBI(warmStart=True).
+        This is not necessary, but in some cases may speed up the computations.
     what_to_compare:
         Should the resulting proportions correspond to concentrations or area under the curve? Default is
         'area'. Alternatively can be set to 'concentration'. This argument is used only for NMR spectra.
