@@ -964,6 +964,13 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     if MTD_th is not None:
         assert len(common_horizontal_axis) == len(vortex_th)
 
+    if not np.isclose(sum(proportions)+sum(vortex), 1., atol=len(vortex)*1e-03):
+        warn("""In estimate_proportions:
+Proportions of signal and noise sum to %f instead of 1.
+This may indicate improper results.
+Please check the deconvolution results and consider reporting this warning to the authors.
+                        """ % (sum(proportions)+sum(vortex)))
+
     #confs from outside common_horizontal_axis are gathered in one list
     exp_confs_from_outside_cha = exp_confs_outside_chunks + exp_confs_in_almost_empty_chunks
     
@@ -988,13 +995,6 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     if MTD_th is not None:
         assert len(common_horizontal_axis) == len(vortex_th)
 
-
-    if not np.isclose(sum(proportions)+sum(vortex), 1., atol=len(vortex)*1e-03):
-        warn("""In estimate_proportions:
-Proportions of signal and noise sum to %f instead of 1.
-This may indicate improper results.
-Please check the deconvolution results and consider reporting this warning to the authors.
-                        """ % (sum(proportions)+sum(vortex)))
         
     compare_area = ((not nmr) or (nmr and what_to_compare=='area'))
 
