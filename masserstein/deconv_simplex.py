@@ -57,8 +57,8 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
                 List of tuples with variable as the first element and value of the variable as the second element.
                 Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
                 You can extract these values from the previous run of the function using 'output_warm_start_values' key.
-                Important note: if you want to use this argument, you need to set warm_start=True for the used solver.
-                For example: lp.GUROBI(warm_start=True).
+                Important note: if you want to use this argument, you need to turn on warm start for the used solver.
+                For example: lp.GUROBI(warmStart=True).
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -197,8 +197,8 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
                 List of tuples with variable as the first element and value of the variable as the second element.
                 Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
                 You can extract these values from the previous run of the function using 'output_warm_start_values' key.
-                Important note: if you want to use this argument, you need to set warm_start=True for the used solver.
-                For example: lp.GUROBI(warm_start=True).
+                Important note: if you want to use this argument, you need to turn on warm start for the used solver.
+                For example: lp.GUROBI(warmStart=True).
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -341,8 +341,8 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 List of tuples with variable as the first element and value of the variable as the second element.
                 Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
                 You can extract these values from the previous run of the function using 'output_warm_start_values' key.
-                Important note: if you want to use this argument, you need to set warm_start=True for the used solver.
-                For example: lp.GUROBI(warm_start=True).
+                Important note: if you want to use this argument, you need to turn on warm start for the used solver.
+                For example: lp.GUROBI(warmStart=True).
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -512,8 +512,8 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                 List of tuples with variable as the first element and value of the variable as the second element.
                 Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
                 You can extract these values from the previous run of the function using 'output_warm_start_values' key.
-                Important note: if you want to use this argument, you need to set warm_start=True for the used solver.
-                For example: lp.GUROBI(warm_start=True).
+                Important note: if you want to use this argument, you need to turn on warm start for the used solver.
+                For example: lp.GUROBI(warmStart=True).
         
         _____
         Returns: dict
@@ -665,7 +665,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     spectrum: Spectrum object
         The mixture's spectrum.
     query: list of Spectrum objects
-        A list of components' spectra (reference spectra).
+        A list of components' spectra (a.k.a. reference spectra, library).
     MTD: Maximum Transport Distance, a.k.a. kappa_mixture, float
         Signal from mixture's spectrum will be transported up to this distance when estimating
         components proportions. This parameter is interpreted as denoising penalty for mixture.
@@ -695,31 +695,39 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     solver: 
         Which solver should be used. We recommend using lp.GUROBI() (note that it requires obtaining a licence).
         To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True). 
-        If you prefer to use Magnetstein without Gurobi set this argument to solver=LpSolverDefault.
-        Note that using Magnetstein without Gurobi can result in long computation time and, in some cases, incorrect results.
+        If you prefer to use Magnetstein without Gurobi, set this argument to solver=LpSolverDefault.
+        Note that using Magnetstein with unreliable solver can result in long computation time and, in some cases, incorrect results.
+        Important note: if you want the algorithm to utilize the estimation from the previous time point, 
+        you need to turn on warm start for the used solver. For example: lp.GUROBI(warmStart=True).
     what_to_compare:
         Should the resulting proportions correspond to concentrations or area under the curve? Default is
         'concentration'. Alternatively can be set to 'area'. This argument is used only for NMR spectra.
+        Setting this argument to 'concentration' makes the algorithm rescale areas under the curves by the number of NMR-active nuclei.
+        Note that if you set 'what_to_compare'='concentration', you need to specify the number of NMR-active nuclei for each component 
+        in query list (for example: component.protons=3).
     warm_start_values:
         List of lists of tuples with variable as the first element of the tuple and value of the variable as the second element of the tuple.
         Each of the nested lists corresponds to a chunk in exp_conf_chunKs.
         Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
         You can extract the values from the previous run of the function using 'output_warm_start_values' key.
-        Important note: if you want to use this argument, you need to set warm_start=True for the used solver.
-        For example: lp.GUROBI(warm_start=True).
+        Important note: if you want to use this argument, you need to turn on warm start for the used solver. 
+        For example: lp.GUROBI(warmStart=True).
     _____
     Returns: dict
         A dictionary with the following entries:
-        - proportions: List of proportions of components' spectra.
-        - Wasserstein distance: Value of Wasserstein distance between mixture's spectrum and component's spectra added 
+        - proportions: List of proportions of components' spectra. 
+        Note that they do not have to sum up to 1, because some part of the signal can be noise.
+        - Wasserstein distance: Value of the Wasserstein distance between mixture's spectrum and component's spectra added 
         in computed proportions (taking into consideration removed signal).
+
         If what_to_compare='area' and MTD_th parameter is not equal to None, then the dictionary contains also 
         the following entries:
-        - noise: List of intensities that could not be explained by the supplied formulas. 
-        The intensities correspond to the ppm (or m/z) values of the mixture's spectrum.
-        - noise_in_components: List of intensities from components' spectra
-        that do not correspond to any intensities in the mixture's spectrum and therefore were 
-        identified as noise. The intensities correspond to the ppm (or m/z) values from common horizontal axis.
+        - noise: List of intensities from mixture's spectrum that do not correspond to any intensities 
+        in components' spectra and therefore were identified as noise. 
+        The order of these intensities corresponds to the consecutive ppm (or m/z) values from common horizontal axis.
+        - noise_in_components: List of intensities from components' spectra that do not correspond to any intensities 
+        in the mixture's spectrum and therefore were identified as noise. 
+        The order of these intensities corresponds to the consecutive ppm (or m/z) values from common horizontal axis.
         - proportion_of_noise_in_components: Proportion of noise present in the combination of components'
         spectra.
         - common_horizontal_axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' 
@@ -1064,16 +1072,36 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         Which solver should be used. We recommend using lp.GUROBI() (note that it requires obtaining a licence).
         To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True). 
         If you prefer to use Magnetstein without Gurobi set this argument to solver=LpSolverDefault.
-        Note that using Magnetstein without Gurobi can result in long computation time and, in some cases, incorrect results.
+        Note that using Magnetstein with unreliable solver can result in long computation time and, in some cases, incorrect results.
+        Important note: if you want the algorithm to utilize the estimation from the previous time points, 
+        you need to turn on warm start for the used solver. For example: lp.GUROBI(warmStart=True).
     what_to_compare:
         Should the resulting proportions correspond to concentrations or area under the curve? Default is
-        'concentration'. Alternatively can be set to 'area'. This argument is used only for NMR spectra.
+        'area'. Alternatively can be set to 'concentration'. This argument is used only for NMR spectra.
+        Setting this argument to 'concentration' makes the algorithm rescale areas under the curves by the number of NMR-active nuclei.
+        Note that if you set 'what_to_compare'='concentration', you need to specify the number of NMR-active nuclei for each component 
+        in query list (for example: component.protons=3).
     _____
     Returns: dict
         A dictionary with the following entries:
-        - proportions_in_time: List of proportions of reagents' spectra changing in time.
-        If what_to_compare='area' and MTD_th parameter is not equal to None, then the dictionary contains also 
-        the following entries:
+        - proportions_in_time: List of proportions of reagents' spectra in consecutive time points.
+        Note that the proportions in i-th time point do not have to sum up to 1, because some part of the signal can be noise.
+        - Wasserstein_distance_in_time: List of values of the Wasserstein distance between mixture's spectrum and reagents spectra added 
+        in computed proportions (taking into consideration removed signal), in consecutive time points.
+
+        If what_to_compare='area', then the dictionary contains also the following entries:
+        - noise_in_mixture_in_time: List of lists of intensities from mixture's spectrum that do not correspond to any intensities 
+        in components' spectra, and therefore were identified as noise, in consecutive time points. 
+        The intensities in i-th list are the noise intensities of the mixture's spectrum in i-th time point. 
+        The order of these intensities corresponds to the consecutive ppm (or m/z) values from the i-th common horizontal axis.
+        - noise_in_reagents_in_time: List of lists of intensities from reagents' spectra that do not correspond to any intensities 
+        in mixture's spectrum, and therefore were identified as noise, in consecutive time points. 
+        The intensities in i-th list are the noise intensities of the reagents' spectra in i-th time point. 
+        The order of these intensities corresponds to the consecutive ppm (or m/z) values from the i-th common horizontal axis.
+        - proportion_of_noise_in_reagents_in_time: List of proportions of noise present in the combination of reagents' spectra
+        in consecutive time points.
+        - common_horizontal_axis: List of lists storing all the ppm (or m/z) values from the mixture's spectrum 
+        and from the components' spectra, in consecutive time points.
     """
         
         
@@ -1122,6 +1150,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
     # Preparing lists for storing the results
 
     proportions_in_time = []
+    Wasserstein_distance_in_time = []
     noise_proportions_in_time = []
     noise = []
     noise_in_reagents = []
@@ -1179,10 +1208,13 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         previous_horizontal_axis = current_horizontal_axis
 
         proportions_in_time.append(estimation['proportions'])
-        noise_proportions_in_time.append(estimation['proportion_of_noise_in_components'])
-        noise.append(estimation['noise'])
-        noise_in_reagents.append(estimation['noise_in_components'])
-        common_horizontal_axis_list.append(estimation['common_horizontal_axis'])
+        Wasserstein_distance_in_time.append(estimation['Wasserstein distance'])
+
+        if 'what_to_compare' == 'area':
+                noise_proportions_in_time.append(estimation['proportion_of_noise_in_components'])
+                noise.append(estimation['noise'])
+                noise_in_reagents.append(estimation['noise_in_components'])
+                common_horizontal_axis_list.append(estimation['common_horizontal_axis'])
 
         current_warm_start_values = deepcopy(estimation['output_warm_start_values'])
 
@@ -1193,8 +1225,18 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
             print('\n')
 
     
-    return {'proportions_in_time' : proportions_in_time,
-            'noise_in_mixture_in_time' : noise, 
-           'noise_in_reagents_in_time' : noise_in_reagents, 
-            'proportion_of_noise_in_reagents_in_time': noise_proportions_in_time,
-           'common_horizontal_axis_in_time' : common_horizontal_axis_list}
+    if what_to_compare == 'area':
+
+        results_dict =  {'proportions_in_time' : proportions_in_time,
+                         'Wasserstein_distance_in_time': Wasserstein_distance_in_time,
+                            'noise_in_mixture_in_time' : noise, 
+                           'noise_in_reagents_in_time' : noise_in_reagents, 
+                            'proportion_of_noise_in_reagents_in_time': noise_proportions_in_time,
+                           'common_horizontal_axis_in_time' : common_horizontal_axis_list}
+
+    else:
+
+        results_dict =  {'proportions_in_time' : proportions_in_time,
+                        'Wasserstein_distance_in_time': Wasserstein_distance_in_time}
+
+    return results_dict
