@@ -48,7 +48,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
             thr_sp: list of Spectrum objects
                 List of components (i.e. reference, query, theoretical) spectra.
             penalty: float
-                Denoising penalty.
+                Denoising penalty, a.k.a. kappa, kappa_mixture.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
@@ -67,6 +67,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
             - trash: Amount of noise in the consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
+            - common_horizontal_axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' spectra in a sorted list. 
             - output_warm_start_values: List of tuples with variable as the first element and optimal value of the variable as the second element.
                 These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
                 obtained in the current run.
@@ -188,7 +189,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
             thr_sp: list of Spectrum objects
                 List of components' (i.e. reference, query, theoretical) spectra.
             penalty: float
-                Denoising penalty.
+                Denoising penalty, a.k.a. kappa, kappa_mixture.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
@@ -207,6 +208,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
             - trash: Amount of noise in the consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
+            - common_horizontal_axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' spectra in a sorted list. 
             - output_warm_start_values: List of tuples with variable as the first element and optimal value of the variable as the second element.
                 These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
                 obtained in the current run.
@@ -319,7 +321,7 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         This function solves linear program describing optimal transport of signal between 
         the mixture's spectrum and the list of components' spectra. 
         Two auxiliary points are introduced in order to remove noise from the mixture's spectrum
-        and from the combination of components' spectra. 
+        and from the combination of components' spectra, as described by Domżał et al., 2023.
         Transport of signal between the two auxiliary points is explicitly forbidden.
         Mathematically, this formulation is equivalent to the one implemented in dualdeconv4
         and both give the same results up to roundoff errors.
@@ -328,11 +330,11 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             exp_sp: Spectrum object
                 Mixture's spectrum.
             thr_sp: Spectrum object
-                List of components' (i.e. reference, query, theoretical) spectra.
+                List of components' (a.k.a. reference, query, theoretical, library) spectra.
             penalty: float
-                Denoising penalty for the mixture's spectrum.
+                Denoising penalty for the mixture's spectrum, a.k.a. kappa_mixture.
             penalty_th: float
-                Denoising penalty for the components' spectra.
+                Denoising penalty for the components' spectra, a.k.a. kappa_components, kappa_library.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
@@ -488,9 +490,9 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
 
         """
         This function solves linear program describing optimal transport of signal between the mixture's 
-        spectrum and the list of components' spectra. 
+        spectrum and the list of components' spectra.
         Two auxiliary points are introduced in order to remove noise from the mixture's spectrum
-        and from the combination of components' spectra. 
+        and from the combination of components' spectra, as described by Domżał et al., 2023.
         Transport of signal between the two auxiliary points is allowed (with cost equal to penalty + penalty_th),
         however, it is not optimal so it never occurs. Mathematically, this formulation is equivalent to the one 
         implemented in dualdeconv3 and both give the same results up to roundoff errors.
@@ -499,11 +501,11 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             exp_sp: Spectrum object
                 Mixture's spectrum.
             thr_sp: Spectrum object
-                List of components' (i.e. reference, query, theoretical) spectra.
+                List of components' (a.k.a. reference, query, theoretical, library) spectra.
             penalty: float
-                Denoising penalty for the mixture's spectrum.
+                Denoising penalty for the mixture's spectrum, a.k.a. kappa_mixture.
             penalty_th: float
-                Denoising penalty for the components spectra.
+                Denoising penalty for the components spectra, a.k.a. kappa_components, kappa_library.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
@@ -1079,8 +1081,8 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         Should the resulting proportions correspond to concentrations or area under the curve? Default is
         'area'. Alternatively can be set to 'concentration'. This argument is used only for NMR spectra.
         Setting this argument to 'concentration' makes the algorithm rescale areas under the curves by the number of NMR-active nuclei.
-        Note that if you set 'what_to_compare'='concentration', you need to specify the number of NMR-active nuclei for each component 
-        in query list (for example: component.protons=3).
+        Note that if you set 'what_to_compare'='concentration', you need to specify the number of NMR-active nuclei for each reagent 
+        in query list (for example: reagent.protons=3).
     _____
     Returns: dict
         A dictionary with the following entries:
@@ -1091,7 +1093,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
 
         If what_to_compare='area', then the dictionary contains also the following entries:
         - noise_in_mixture_in_time: List of lists of intensities from mixture's spectrum that do not correspond to any intensities 
-        in components' spectra, and therefore were identified as noise, in consecutive time points. 
+        in reagents' spectra, and therefore were identified as noise, in consecutive time points. 
         The intensities in i-th list are the noise intensities of the mixture's spectrum in i-th time point. 
         The order of these intensities corresponds to the consecutive ppm (or m/z) values from the i-th common horizontal axis.
         - noise_in_reagents_in_time: List of lists of intensities from reagents' spectra that do not correspond to any intensities 
@@ -1101,7 +1103,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         - proportion_of_noise_in_reagents_in_time: List of proportions of noise present in the combination of reagents' spectra
         in consecutive time points.
         - common_horizontal_axis: List of lists storing all the ppm (or m/z) values from the mixture's spectrum 
-        and from the components' spectra, in consecutive time points.
+        and from the reagents' spectra, in consecutive time points.
     """
         
         
