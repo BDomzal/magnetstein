@@ -1214,7 +1214,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         proportions_in_time.append(estimation['proportions'])
         Wasserstein_distance_in_time.append(estimation['Wasserstein distance'])
 
-        if 'what_to_compare' == 'area':
+        if what_to_compare == 'area':
                 noise_proportions_in_time.append(estimation['proportion_of_noise_in_components'])
                 noise.append(estimation['noise'])
                 noise_in_reagents.append(estimation['noise_in_components'])
