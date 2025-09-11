@@ -141,8 +141,8 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
                     pass
         else:
             if not quiet:
-                print('Warm start values are None or current mixture spectrum (' + str(i) + \
-                        ') has different chemical shift axis than the previous one.\
+                print('Warm start values are None or current mixture spectrum \
+                        has different chemical shift axis than the previous one.\
                         Therefore, estimation for this spectrum will be performed \
                         without using information from the previous time point.')
 
@@ -282,8 +282,8 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
                     pass
         else:
             if not quiet:
-                print('Warm start values are None or current mixture spectrum (' + str(i) + \
-                        ') has different chemical shift axis than the previous one.\
+                print('Warm start values are None or current mixture spectrum \
+                        has different chemical shift axis than the previous one.\
                         Therefore, estimation for this spectrum will be performed \
                         without using information from the previous time point.')
 
@@ -452,8 +452,8 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                     pass
         else:
             if not quiet:
-                print('Warm start values are None or current mixture spectrum (' + str(i) + \
-                        ') has different chemical shift axis than the previous one.\
+                print('Warm start values are None or current mixture spectrum \
+                        has different chemical shift axis than the previous one.\
                         Therefore, estimation for this spectrum will be performed \
                         without using information from the previous time point.')
 
@@ -622,8 +622,8 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                     pass
         else:
             if not quiet:
-                print('Warm start values are None or current mixture spectrum (' + str(i) + \
-                        ') has different chemical shift axis than the previous one.\
+                print('Warm start values are None or current mixture spectrum \
+                        has different chemical shift axis than the previous one.\
                         Therefore, estimation for this spectrum will be performed \
                         without using information from the previous time point.')
 
@@ -1146,7 +1146,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
 
     else:
         print('Cannot retrieve spectra of mixtures from mixture_in_time.\
-                \n Make sure that provided object is either a list of Spectum objects or numpy.ndarray.')
+                \n Make sure that provided object is either a list of (NMR)Spectrum objects or numpy.ndarray.')
         return
 
 
@@ -1197,7 +1197,7 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
             else:
 
                 if verbose:
-                    print('Current mixture spectrum (' + '+str(i)' + \
+                    print('Current mixture spectrum (' + str(i) + \
                             ') has different chemical shift axis than the previous one.\
                             Therefore, estimation for this spectrum will be performed \
                             without using information from the previous time point.')
