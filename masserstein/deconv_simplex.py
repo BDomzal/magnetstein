@@ -9,6 +9,7 @@ from tqdm import tqdm
 from pulp.apis import LpSolverDefault
 from masserstein import misc
 import math
+from copy import deepcopy
 
 
 def intensity_generator(confs, mzaxis):
@@ -34,7 +35,8 @@ def intensity_generator(confs, mzaxis):
                 yield 0.
 
 
-def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
+def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
+                warm_start_values=None):
         """
         This function solves linear program describing optimal transport of signal between the mixture's spectrum
         and the list of components' spectra. Additionally, an auxiliary point is introduced in order to
@@ -46,11 +48,17 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
             thr_sp: list of Spectrum objects
                 List of components (i.e. reference, query, theoretical) spectra.
             penalty: float
-                Denoising penalty.
+                Denoising penalty, a.k.a. kappa, kappa_mixture.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
                 To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
+            warm_start_values:
+                List of tuples with variable as the first element and value of the variable as the second element.
+                Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
+                You can extract these values from the previous run of the function using 'output_warm_start_values' key.
+                Important note: if you want to use this argument, you need to turn on warm start for the used solver.
+                For example: lp.GUROBI(warmStart=True). This is not necessary, but in some cases may speed up the computations.
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -59,6 +67,10 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
             - trash: Amount of noise in the consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
+            - common_horizontal_axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' spectra in a sorted list. 
+            - output_warm_start_values: List of tuples with variable as the first element and optimal value of the variable as the second element.
+                These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
+                obtained in the current run.
         """
         start = time()
         exp_confs = exp_sp.confs.copy()
@@ -107,8 +119,7 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
         for j in range(k):
                 thr_vec = intensity_generator(thr_confs[j], common_horizontal_axis)
                 program += lp.lpSum(v*x for v, x in zip(thr_vec, lpVars) if v > 0.) <= 0, 'P%i' % (j+1)
-        if not quiet:
-                print('tsk tsk')
+
         ##    for i in range(n-1):
         ##        program += lpVars[i]-lpVars[i+1] <= interval_lengths[i], 'EpsPlus %i' % (i+1)
         ##        program += lpVars[i] - lpVars[i+1] >=  -interval_lengths[i], 'EpsMinus %i' % (i+1)
@@ -120,6 +131,21 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
         #program.writeLP('WassersteinL1.lp')
         if not quiet:
                 print("Starting solver")
+
+        if warm_start_values is not None and len(warm_start_values) == len(program.variables()):
+            warm_start_values = dict(warm_start_values)
+            for var in program.variables():
+                try:
+                    var.setInitialValue(warm_start_values[str(var)])
+                except ValueError:
+                    pass
+        else:
+            if not quiet:
+                print('Warm start values are None or current mixture spectrum \
+                        has different chemical shift axis than the previous one.\
+                        Therefore, estimation for this spectrum will be performed \
+                        without using information from the previous time point.')
+
         LpSolverDefault.msg = not quiet
         program.solve(solver = solver)
         end = time()
@@ -142,11 +168,13 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
                 Please check the deconvolution results and consider reporting this warning to the authors.
                                     """ % (sum(probs)+sum(abyss)))
 
-        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), 'status': program.status,
-                'common_horizontal_axis': common_horizontal_axis}
+        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), "status": program.status,
+                "common_horizontal_axis": common_horizontal_axis,
+                "output_warm_start_values": [(v, v.varValue) for v in program.variables()]}
 
 
-def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault):
+def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
+                                warm_start_values=None):
 
         """
         Alternative version of dualdeconv2 - using .pi instead of .dj to extract optimal values of variables.
@@ -161,11 +189,17 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
             thr_sp: list of Spectrum objects
                 List of components' (i.e. reference, query, theoretical) spectra.
             penalty: float
-                Denoising penalty.
+                Denoising penalty, a.k.a. kappa, kappa_mixture.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
                 To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
+            warm_start_values:
+                List of tuples with variable as the first element and value of the variable as the second element.
+                Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
+                You can extract these values from the previous run of the function using 'output_warm_start_values' key.
+                Important note: if you want to use this argument, you need to turn on warm start for the used solver.
+                For example: lp.GUROBI(warmStart=True). This is not necessary, but in some cases may speed up the computations.
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -174,6 +208,10 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
             - trash: Amount of noise in the consecutive ppm (or m/z) points from common horizontal axis.
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
+            - common_horizontal_axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' spectra in a sorted list. 
+            - output_warm_start_values: List of tuples with variable as the first element and optimal value of the variable as the second element.
+                These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
+                obtained in the current run.
         """
 
         start = time()
@@ -223,8 +261,7 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         for j in range(k):
                 thr_vec = intensity_generator(thr_confs[j], common_horizontal_axis)
                 program += lp.lpSum(v*x for v, x in zip(thr_vec, lpVars) if v > 0.) <= 0, 'P%i' % (j+1)
-        if not quiet:
-                print('tsk tsk')
+
         for i in range(n):
                 program += lpVars[i] <= penalty, 'g%i' % (i+1)
         for i in range(n-1):
@@ -235,6 +272,21 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         #program.writeLP('WassersteinL1.lp')
         if not quiet:
                 print("Starting solver")
+
+        if warm_start_values is not None and len(warm_start_values) == len(program.variables()):
+            warm_start_values = dict(warm_start_values)
+            for var in program.variables():
+                try:
+                    var.setInitialValue(warm_start_values[str(var)])
+                except ValueError:
+                    pass
+        else:
+            if not quiet:
+                print('Warm start values are None or current mixture spectrum \
+                        has different chemical shift axis than the previous one.\
+                        Therefore, estimation for this spectrum will be performed \
+                        without using information from the previous time point.')
+
         LpSolverDefault.msg = not quiet
         program.solve(solver = solver)
         end = time()
@@ -256,18 +308,20 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
                 Please check the deconvolution results and consider reporting this warning to the authors.
                                     """ % (sum(probs)+sum(abyss)))
 
-        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), 'status': program.status,
-                'common_horizontal_axis': common_horizontal_axis}
+        return {"probs": probs, "trash": abyss, "fun": lp.value(program.objective), "status": program.status,
+                "common_horizontal_axis": common_horizontal_axis,
+                "output_warm_start_values": [(v, v.varValue) for v in program.variables()]}
 
 
 
-def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault):
+def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault,
+                warm_start_values=None):
 
         """
         This function solves linear program describing optimal transport of signal between 
         the mixture's spectrum and the list of components' spectra. 
         Two auxiliary points are introduced in order to remove noise from the mixture's spectrum
-        and from the combination of components' spectra. 
+        and from the combination of components' spectra, as described by Domżał et al., 2023.
         Transport of signal between the two auxiliary points is explicitly forbidden.
         Mathematically, this formulation is equivalent to the one implemented in dualdeconv4
         and both give the same results up to roundoff errors.
@@ -276,15 +330,21 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             exp_sp: Spectrum object
                 Mixture's spectrum.
             thr_sp: Spectrum object
-                List of components' (i.e. reference, query, theoretical) spectra.
+                List of components' (a.k.a. reference, query, theoretical, library) spectra.
             penalty: float
-                Denoising penalty for the mixture's spectrum.
+                Denoising penalty for the mixture's spectrum, a.k.a. kappa_mixture.
             penalty_th: float
-                Denoising penalty for the components' spectra.
+                Denoising penalty for the components' spectra, a.k.a. kappa_components, kappa_library.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
                 To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
+            warm_start_values:
+                List of tuples with variable as the first element and value of the variable as the second element.
+                Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
+                You can extract these values from the previous run of the function using 'output_warm_start_values' key.
+                Important note: if you want to use this argument, you need to turn on warm start for the used solver.
+                For example: lp.GUROBI(warmStart=True). This is not necessary, but in some cases may speed up the computations.
         _____
         Returns: dict
             Dictionary with the following entries:
@@ -298,6 +358,9 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             - status: Status of the linear program.
             - common horizontal axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' 
             spectra in a sorted list. 
+            - output_warm_start_values: List of tuples with variable as the first element and optimal value of the variable as the second element.
+                These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
+                obtained in the current run.
         """
 
         start = time()
@@ -361,9 +424,6 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         program += lp.lpSum(v*x for v, x in zip(exp_vec, lpVars[:n-1]+[0])).addInPlace(
                                 lp.lpSum(v*x for v, x in zip([0, 1, -1, 0], lpVars[n-1:]))) <= 0, 'p0_prime'
 
-        if not quiet:
-                print('tsk tsk')
-
         for i in range(n-1):
                 program +=  lpVars[i] - lpVars[n-1]  <=  penalty, 'g_%i' % (i+1)
                 program +=  -lpVars[n] - lpVars[i] <= penalty_th, 'g_prime_%i' % (i+1)
@@ -382,6 +442,20 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
 
         if not quiet:
                 print("Starting solver")
+
+        if warm_start_values is not None and len(warm_start_values) == len(program.variables()):
+            warm_start_values = dict(warm_start_values)
+            for var in program.variables():
+                try:
+                    var.setInitialValue(warm_start_values[str(var)])
+                except ValueError:
+                    pass
+        else:
+            if not quiet:
+                print('Warm start values are None or current mixture spectrum \
+                        has different chemical shift axis than the previous one.\
+                        Therefore, estimation for this spectrum will be performed \
+                        without using information from the previous time point.')
 
         #Solving
         LpSolverDefault.msg = not quiet
@@ -407,16 +481,18 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                                     """ % (sum(probs)+sum(abyss)))
 
         return {"probs": probs, "noise_in_components": p0_prime, "trash": abyss, "components_trash": abyss_th,
-         "fun": lp.value(program.objective), 'status': program.status, 'common_horizontal_axis': common_horizontal_axis}
+                "fun": lp.value(program.objective), "status": program.status, "common_horizontal_axis": common_horizontal_axis,
+                "output_warm_start_values": [(v, v.varValue) for v in program.variables()]}
 
 
-def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault):
+def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolverDefault,
+                warm_start_values=None):
 
         """
         This function solves linear program describing optimal transport of signal between the mixture's 
-        spectrum and the list of components' spectra. 
+        spectrum and the list of components' spectra.
         Two auxiliary points are introduced in order to remove noise from the mixture's spectrum
-        and from the combination of components' spectra. 
+        and from the combination of components' spectra, as described by Domżał et al., 2023.
         Transport of signal between the two auxiliary points is allowed (with cost equal to penalty + penalty_th),
         however, it is not optimal so it never occurs. Mathematically, this formulation is equivalent to the one 
         implemented in dualdeconv3 and both give the same results up to roundoff errors.
@@ -425,15 +501,21 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             exp_sp: Spectrum object
                 Mixture's spectrum.
             thr_sp: Spectrum object
-                List of components' (i.e. reference, query, theoretical) spectra.
+                List of components' (a.k.a. reference, query, theoretical, library) spectra.
             penalty: float
-                Denoising penalty for the mixture's spectrum.
+                Denoising penalty for the mixture's spectrum, a.k.a. kappa_mixture.
             penalty_th: float
-                Denoising penalty for the components spectra.
+                Denoising penalty for the components spectra, a.k.a. kappa_components, kappa_library.
             solver: 
                 Which solver should be used. In case of problems with the default solver,
                 lp.GUROBI() is recommended (note that it requires obtaining a licence).
                 To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True).
+            warm_start_values:
+                List of tuples with variable as the first element and value of the variable as the second element.
+                Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
+                You can extract these values from the previous run of the function using 'output_warm_start_values' key.
+                Important note: if you want to use this argument, you need to turn on warm start for the used solver.
+                For example: lp.GUROBI(warmStart=True). This is not necessary, but in some cases may speed up the computations.
         
         _____
         Returns: dict
@@ -447,6 +529,9 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
             - fun: Optimal value of the objective function.
             - status: Status of the linear program.
             - common horizontal axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' spectra in a sorted list. 
+            - output_warm_start_values: List of tuples with variable as the first element and optimal value of the variable as the second element.
+                These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
+                obtained in the current run.
         """
 
         start = time()
@@ -508,9 +593,6 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         exp_vec = intensity_generator(exp_confs, common_horizontal_axis)
         program += lp.lpSum(v*x for v, x in zip(exp_vec, lpVars[:n-1]+[0])).addInPlace(
                             lp.lpSum(v*x for v, x in zip([0, 1, -1, 0], lpVars[n-1:]))) <= penalty_th, 'p0_prime'
-
-        if not quiet:
-                print('tsk tsk')
         
         for i in range(n-1):
                 program +=  lpVars[i] - lpVars[n-1]  <=  0, 'g_%i' % (i+1)
@@ -530,6 +612,20 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
 
         if not quiet:
                 print("Starting solver")
+
+        if warm_start_values is not None and len(warm_start_values) == len(program.variables()):
+            warm_start_values = dict(warm_start_values)
+            for var in program.variables():
+                try:
+                    var.setInitialValue(warm_start_values[str(var)])
+                except ValueError:
+                    pass
+        else:
+            if not quiet:
+                print('Warm start values are None or current mixture spectrum \
+                        has different chemical shift axis than the previous one.\
+                        Therefore, estimation for this spectrum will be performed \
+                        without using information from the previous time point.')
 
         #Solving
         LpSolverDefault.msg = not quiet
@@ -554,13 +650,15 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
                                     """ % (sum(probs)+sum(abyss)))
 
         return {"probs": probs, "noise_in_components": p0_prime, "trash": abyss, "components_trash": abyss_th, 
-        "fun": lp.value(program.objective)+penalty, 'status': program.status, 'common_horizontal_axis': common_horizontal_axis}
+                "fun": lp.value(program.objective)+penalty, "status": program.status, "common_horizontal_axis": common_horizontal_axis,
+                'output_warm_start_values': [(str(v), v.varValue) for v in program.variables()]}
 
 
 def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                         MMD=-1, max_reruns=3, verbose=False, 
                         progress=False, MTD_th=0.22, solver=lp.GUROBI(),
-                        what_to_compare='concentration'):
+                        what_to_compare='concentration',
+                        warm_start_values=None):
     """
     Returns estimated proportions of components from query in mixture's spectrum.
     Performs initial filtering of components' and mixture's spectra to speed up the computations.
@@ -569,8 +667,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     spectrum: Spectrum object
         The mixture's spectrum.
     query: list of Spectrum objects
-        A list of components' spectra (reference spectra).
-    MTD: Maximum Transport Distance, float
+        A list of components' spectra (a.k.a. reference spectra, library).
+    MTD: Maximum Transport Distance, a.k.a. kappa_mixture, float
         Signal from mixture's spectrum will be transported up to this distance when estimating
         components proportions. This parameter is interpreted as denoising penalty for mixture.
         To disable denoising, set this parameter to large value (for example 1000). Default is 0.25. 
@@ -591,7 +689,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         Print diagnostic messages? Default is False.
     progress: bool
         Whether to display progress bars during work. Default is False.
-    MTD_th: Maximum Transport Distance for components' spectra, float
+    MTD_th: Maximum Transport Distance for components' spectra, a.k.a. kappa_components, a.k.a. kappa_library, float
         If presence of noise in components' spectra is not expected, 
         then this parameter should be set to None. Otherwise, set its value to some positive real number.
         Signal from components' spectra will be transported up to this distance 
@@ -599,28 +697,49 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     solver: 
         Which solver should be used. We recommend using lp.GUROBI() (note that it requires obtaining a licence).
         To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True). 
-        If you prefer to use Magnetstein without Gurobi set this argument to solver=LpSolverDefault.
-        Note that using Magnetstein without Gurobi can result in long computation time and, in some cases, incorrect results.
+        If you prefer to use Magnetstein without Gurobi, set this argument to solver=LpSolverDefault.
+        Note that using Magnetstein with unreliable solver can result in long computation time and, in some cases, incorrect results.
+        Important note: if you want the algorithm to utilize the estimation from the previous time point, 
+        you need to turn on warm start for the used solver. For example: lp.GUROBI(warmStart=True).
+        This is not necessary, but in some cases may speed up the computations.
     what_to_compare:
         Should the resulting proportions correspond to concentrations or area under the curve? Default is
         'concentration'. Alternatively can be set to 'area'. This argument is used only for NMR spectra.
+        Setting this argument to 'concentration' makes the algorithm rescale areas under the curves by the number of NMR-active nuclei.
+        Note that if you set 'what_to_compare'='concentration', you need to specify the number of NMR-active nuclei for each component 
+        in query list (for example: component.protons=3).
+    warm_start_values:
+        List of lists of tuples with variable as the first element of the tuple and value of the variable as the second element of the tuple.
+        Each of the nested lists corresponds to a chunk in exp_conf_chunKs.
+        Use this argument, if you want the solver to be warm-started, i.e. to get some initial values of variables to start solving from.
+        You can extract the values from the previous run of the function using 'output_warm_start_values' key.
+        Important note: if you want to use this argument, you need to turn on warm start for the used solver. 
+        For example: lp.GUROBI(warmStart=True).
     _____
     Returns: dict
         A dictionary with the following entries:
-        - proportions: List of proportions of components' spectra.
-        - Wasserstein distance: Value of Wasserstein distance between mixture's spectrum and component's spectra added 
+        - proportions: List of proportions of components' spectra. 
+        Note that they do not have to sum up to 1, because some part of the signal can be noise.
+        - Wasserstein distance: Value of the Wasserstein distance between mixture's spectrum and component's spectra added 
         in computed proportions (taking into consideration removed signal).
+
         If what_to_compare='area' and MTD_th parameter is not equal to None, then the dictionary contains also 
         the following entries:
-        - noise: List of intensities that could not be explained by the supplied formulas. 
-        The intensities correspond to the ppm (or m/z) values of the mixture's spectrum.
-        - noise_in_components: List of intensities from components' spectra
-        that do not correspond to any intensities in the mixture's spectrum and therefore were 
-        identified as noise. The intensities correspond to the ppm (or m/z) values from common horizontal axis.
+        - noise: List of intensities from mixture's spectrum that do not correspond to any intensities 
+        in components' spectra and therefore were identified as noise. 
+        The order of these intensities corresponds to the consecutive ppm (or m/z) values from common horizontal axis.
+        - noise_in_components: List of intensities from components' spectra that do not correspond to any intensities 
+        in the mixture's spectrum and therefore were identified as noise. 
+        The order of these intensities corresponds to the consecutive ppm (or m/z) values from common horizontal axis.
         - proportion_of_noise_in_components: Proportion of noise present in the combination of components'
         spectra.
         - common_horizontal_axis: All the ppm (or m/z) values from the mixture's spectrum and from the components' 
         spectra in a sorted list. 
+        - output_warm_start_values: List of lists of tuples with variable as the first element of the tuple and optimal value of the variable 
+        as the second element of the tuple.
+        Each of the nested lists corresponds to a chunk in exp_conf_chunKs.
+        These values can be reused in the next run of the function, by setting argument warm_start_values to output_warm_start_values 
+        obtained in the current run.
     """
 
     def progr_bar(x, **kwargs):
@@ -686,6 +805,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             print("Normalizing component's spectrum %i." %i)
             scaling_factor = 1.0/math.fsum(v[1] for v in q_confs)
             q_confs = [(v[0], v[1]*scaling_factor) for v in q_confs]
+
+        assert abs(sum(x[1] for x in q_confs) - 1.) < 1e-08, "Component's spectrum is not normalized."
 
         if not nmr:
             assert all(x[0] >= 0 for x in q.confs), "Component's spectrum %i has negative masses!" %i
@@ -775,6 +896,10 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     common_horizontal_axis = []
     objective_function = 0
     exp_confs_in_almost_empty_chunks = []
+    output_warm_start_values = []
+
+    warm_start_possible = warm_start_values is not None and len(warm_start_values) == len(exp_conf_chunks)
+
     for current_chunk_ID, conf_IDs in progr_bar(enumerate(exp_conf_chunks), desc="Deconvolving chunks",
                                                                             total=len(exp_conf_chunks)):
         if verbose:
@@ -805,9 +930,18 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                             raise RuntimeError("Failed to deconvolve a fragment of the mixture's spectrum:\
                                                  (%f, %f)" % chunk_bounds[current_chunk_ID])
                     if MTD_th is None:
-                        dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver)
+                        if warm_start_possible:
+                            dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver, warm_start_values=warm_start_values[current_chunk_ID])
+
+                        else:
+                            dec = dualdeconv2(chunkSp, thrSp, MTD, quiet=True, solver=solver, warm_start_values=None)
+                            
                     else:
-                        dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver)
+                        if warm_start_possible:
+                            dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver, warm_start_values=warm_start_values[current_chunk_ID])
+                        else:
+                            dec = dualdeconv4(chunkSp, thrSp, MTD, MTD_th, quiet=True, solver=solver, warm_start_values=None)
+
                     if dec['status'] == 1:
                             success=True
                     else:
@@ -832,12 +966,21 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                 p0_prime = p0_prime + dec["noise_in_components"]*chunk_TICs[current_chunk_ID]
                 rescaled_vortex_th = [element*chunk_TICs[current_chunk_ID] for element in dec['components_trash']]
                 vortex_th = vortex_th + rescaled_vortex_th
+
+            output_warm_start_values.append(dec['output_warm_start_values'])
                 
             objective_function = objective_function + dec['fun']
 
     assert len(common_horizontal_axis) == len(vortex)
     if MTD_th is not None:
         assert len(common_horizontal_axis) == len(vortex_th)
+
+    if not np.isclose(sum(proportions)+sum(vortex), 1., atol=len(vortex)*1e-03):
+        warn("""In estimate_proportions:
+Proportions of signal and noise sum to %f instead of 1.
+This may indicate improper results.
+Please check the deconvolution results and consider reporting this warning to the authors.
+                        """ % (sum(proportions)+sum(vortex)))
 
     #confs from outside common_horizontal_axis are gathered in one list
     exp_confs_from_outside_cha = exp_confs_outside_chunks + exp_confs_in_almost_empty_chunks
@@ -863,26 +1006,241 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     if MTD_th is not None:
         assert len(common_horizontal_axis) == len(vortex_th)
 
-
-    if not np.isclose(sum(proportions)+sum(vortex), 1., atol=len(vortex)*1e-03):
-        warn("""In estimate_proportions:
-Proportions of signal and noise sum to %f instead of 1.
-This may indicate improper results.
-Please check the deconvolution results and consider reporting this warning to the authors.
-                        """ % (sum(proportions)+sum(vortex)))
         
     compare_area = ((not nmr) or (nmr and what_to_compare=='area'))
 
     if compare_area:
         if MTD_th is not None:
-            return {'proportions': proportions, 'noise': vortex, 'noise_in_components': vortex_th, 
+            result_dict = {'proportions': proportions, 'noise': vortex, 'noise_in_components': vortex_th, 
                 'proportion_of_noise_in_components': p0_prime, 'common_horizontal_axis': common_horizontal_axis, 
-                   'Wasserstein distance': objective_function}
+                   'Wasserstein distance': objective_function, 'output_warm_start_values': output_warm_start_values}
         else:
-            return {'proportions': proportions, 'noise': vortex, 'common_horizontal_axis': common_horizontal_axis,
-                    'Wasserstein distance': objective_function}
+            result_dict = {'proportions': proportions, 'noise': vortex, 'common_horizontal_axis': common_horizontal_axis,
+                    'Wasserstein distance': objective_function, 'output_warm_start_values': output_warm_start_values}
     else:
         queries_protons = [query_spec.protons for query_spec in preprocessed_query]
         rescaled_proportions = [prop/prot for prop, prot in zip(proportions, queries_protons)]
         rescaled_proportions = [prop/sum(rescaled_proportions) for prop in rescaled_proportions]
-        return {'proportions': rescaled_proportions, 'Wasserstein distance': objective_function}
+        result_dict = {'proportions': rescaled_proportions, 'Wasserstein distance': objective_function,
+                        'output_warm_start_values': output_warm_start_values}
+
+    return result_dict
+
+
+
+def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC=1e-8,
+                                MMD=-1, max_reruns=3, verbose=False,
+                                MTD_th=0.5, solver=lp.GUROBI(msg=False, warmStart=True),
+                                what_to_compare='area'):
+
+    """
+    Returns estimated proportions of reagents and noise in mixture changing over time.
+    Uses estimation from previous time point to speed up the computations.
+    _____
+    Parameters:
+    mixture_in_time: list of Spectrum objects or np.ndarray
+        The mixture's spectrum in consecutive time points. If list of Spectrum objects, then the earliest spectrum should be 
+        an element 0 of the list. If np.ndarray, then column 0 of the array should contain chemical shift values, and the 
+        other columns should contain intensities (those corresponding to the earliest spectrum should be in column 1).
+    reagents_spectra: list of Spectrum objects
+        A list of reagents' spectra (both substrates and products) present in the mixture.
+    MTD: Maximum Transport Distance for reaction mixture, a.k.a. kappa_mixture, float
+        This value can be interpreted as the tolerance threshold for peaks' shift in mixture's spectrum,
+        or as a denoising penalty for the mixture. Signal from mixture's spectrum will be
+        transported up to this distance when estimating reagents' proportions.
+        To disable mixture's denoising, set this parameter to large value (for example 1000).
+        Otherwise, set its value to some positive real number. Default is 0.5.
+    MDC: Minimum Detectable Current, float
+        If the spectrum of a reagent encompasses less than
+        this amount of the total signal, it is assumed that this reagent
+        is absent in the spectrum. Default is 1e-8.
+    MMD: Maximum Mode Distance, float
+        If there is no mixture's peak within this distance from the
+        highest peak of spectrum of a reagent,
+        it is assumed that this reagent is absent in the spectrum.
+        Setting this value to -1 disables filtering. Default is -1.
+    max_reruns: int
+        Due to numerical errors, some partial results may be inaccurate.
+        If this is detected, then those results are recomputed for a maximal number of times
+        given by this parameter. Default is 3.
+    verbose: bool
+        Print diagnostic messages? Default is False.
+    MTD_th: Maximum Transport Distance for reagents, a.k.a. kappa_components, a.k.a. kappa_library, float
+        This value can be interpreted as the tolerance threshold for peaks' shifts in reagents spectra,
+        or as a denoising penalty for the reagents. Signal from reagents' spectra will be
+        transported up to this distance when estimating reagents' proportions.
+        To disable reagents' denoising, set this parameter to large value (for example 1000).
+        Otherwise, set its value to some positive real number. Default is 0.5.
+    solver: 
+        Which solver should be used. We recommend using lp.GUROBI() (note that it requires obtaining a licence).
+        To see all solvers available at your machine execute: pulp.listSolvers(onlyAvailable=True) or lp.listSolvers(onlyAvailable=True). 
+        If you prefer to use Magnetstein without Gurobi set this argument to solver=LpSolverDefault.
+        Note that using Magnetstein with unreliable solver can result in long computation time and, in some cases, incorrect results.
+        Important note: if you want the algorithm to utilize the estimation from the previous time points, 
+        you need to turn on warm start for the used solver. For example: lp.GUROBI(warmStart=True).
+        This is not necessary, but in some cases may speed up the computations.
+    what_to_compare:
+        Should the resulting proportions correspond to concentrations or area under the curve? Default is
+        'area'. Alternatively can be set to 'concentration'. This argument is used only for NMR spectra.
+        Setting this argument to 'concentration' makes the algorithm rescale areas under the curves by the number of NMR-active nuclei.
+        Note that if you set 'what_to_compare'='concentration', you need to specify the number of NMR-active nuclei for each reagent 
+        in query list (for example: reagent.protons=3).
+    _____
+    Returns: dict
+        A dictionary with the following entries:
+        - proportions_in_time: List of proportions of reagents' spectra in consecutive time points.
+        Note that the proportions in i-th time point do not have to sum up to 1, because some part of the signal can be noise.
+        - Wasserstein_distance_in_time: List of values of the Wasserstein distance between mixture's spectrum and reagents spectra added 
+        in computed proportions (taking into consideration removed signal), in consecutive time points.
+
+        If what_to_compare='area', then the dictionary contains also the following entries:
+        - noise_in_mixture_in_time: List of lists of intensities from mixture's spectrum that do not correspond to any intensities 
+        in reagents' spectra, and therefore were identified as noise, in consecutive time points. 
+        The intensities in i-th list are the noise intensities of the mixture's spectrum in i-th time point. 
+        The order of these intensities corresponds to the consecutive ppm (or m/z) values from the i-th common horizontal axis.
+        - noise_in_reagents_in_time: List of lists of intensities from reagents' spectra that do not correspond to any intensities 
+        in mixture's spectrum, and therefore were identified as noise, in consecutive time points. 
+        The intensities in i-th list are the noise intensities of the reagents' spectra in i-th time point. 
+        The order of these intensities corresponds to the consecutive ppm (or m/z) values from the i-th common horizontal axis.
+        - proportion_of_noise_in_reagents_in_time: List of proportions of noise present in the combination of reagents' spectra
+        in consecutive time points.
+        - common_horizontal_axis: List of lists storing all the ppm (or m/z) values from the mixture's spectrum 
+        and from the reagents' spectra, in consecutive time points.
+    """
+        
+        
+    # Checking type of spectra
+
+    are_reagents_NMR_spectra = [isinstance(sp, NMRSpectrum) for sp in reagents_spectra]
+    assert all(are_reagents_NMR_spectra) or not any(are_reagents_NMR_spectra), \
+            'Provided spectra of reagents are of mixed types. \
+            Please assert that either all or none of the spectra are NMR spectra.'
+
+    nmr = all(are_reagents_NMR_spectra)
+
+    
+    # Loading spectra of mixtures into a single list
+    
+    if isinstance(mixture_in_time, list):
+
+        mixture_in_time_list = mixture_in_time
+
+        are_mixtures_NMR_spectra = [isinstance(sp, NMRSpectrum) for sp in mixture_in_time_list]
+
+        assert all(are_mixtures_NMR_spectra) or not any(are_mixtures_NMR_spectra), \
+                'Provided spectra of mixtures are of mixed types. \
+                Please assert that either all or none of the spectra are NMR spectra.'
+
+
+    elif isinstance(mixture_in_time, np.ndarray):
+
+        horizontal_axis = mixture_in_time[:,0]
+        intensities = [mixture_in_time[:,i] for i in range(1, mixture_in_time.shape[1])]
+        mixtures_confs_list = [list(zip(horizontal_axis, intensity)) for intensity in intensities]
+
+        if nmr:
+            mixture_in_time_list = [NMRSpectrum(confs=conf) for conf in mixtures_confs_list]
+        else:
+            mixture_in_time_list = [Spectrum(confs=conf) for conf in mixtures_confs_list]
+
+
+    else:
+        print('Cannot retrieve spectra of mixtures from mixture_in_time.\
+                \n Make sure that provided object is either a list of (NMR)Spectrum objects or numpy.ndarray.')
+        return
+
+
+    
+    # Preparing lists for storing the results
+
+    proportions_in_time = []
+    Wasserstein_distance_in_time = []
+    noise_proportions_in_time = []
+    noise = []
+    noise_in_reagents = []
+    common_horizontal_axis_list = []
+
+    
+    # Estimation
+
+    for i, mix in enumerate(mixture_in_time_list):
+        if verbose:
+            print('Analyzing timepoint '+str(i)+'.\n')
+
+        current_mix = mix
+        current_mix.trim_negative_intensities()
+        current_mix.normalize()
+        current_horizontal_axis = [conf[0] for conf in current_mix.confs]
+
+        init_solver = deepcopy(solver)
+
+        if i==0:
+
+            estimation = estimate_proportions(current_mix, reagents_spectra, MTD=MTD, MDC=MDC,
+                                                MMD=MMD, max_reruns=max_reruns, verbose=verbose,
+                                                progress=False, MTD_th=MTD_th, solver=init_solver,
+                                                what_to_compare=what_to_compare,
+                                                warm_start_values=None
+                                                )
+
+        else:
+
+            if current_horizontal_axis == previous_horizontal_axis:
+
+                estimation = estimate_proportions(current_mix, reagents_spectra, MTD=MTD, MDC=MDC,
+                                                MMD=MMD, max_reruns=max_reruns, verbose=verbose,
+                                                progress=False, MTD_th=MTD_th, solver=init_solver,
+                                                what_to_compare=what_to_compare,
+                                                warm_start_values=current_warm_start_values
+                                                )
+
+            else:
+
+                if verbose:
+                    print('Current mixture spectrum (' + str(i) + \
+                            ') has different chemical shift axis than the previous one.\
+                            Therefore, estimation for this spectrum will be performed \
+                            without using information from the previous time point.')
+                estimation = estimate_proportions(current_mix, reagents_spectra, MTD=MTD, MDC=MDC,
+                                                MMD=MMD, max_reruns=max_reruns, verbose=verbose,
+                                                progress=False, MTD_th=MTD_th, solver=init_solver,
+                                                what_to_compare=what_to_compare,
+                                                warm_start_values=None
+                                                )
+
+
+        previous_horizontal_axis = current_horizontal_axis
+
+        proportions_in_time.append(estimation['proportions'])
+        Wasserstein_distance_in_time.append(estimation['Wasserstein distance'])
+
+        if what_to_compare == 'area':
+                noise_proportions_in_time.append(estimation['proportion_of_noise_in_components'])
+                noise.append(estimation['noise'])
+                noise_in_reagents.append(estimation['noise_in_components'])
+                common_horizontal_axis_list.append(estimation['common_horizontal_axis'])
+
+        current_warm_start_values = deepcopy(estimation['output_warm_start_values'])
+
+        if verbose:
+
+            print('Proportions:\n')
+            print(estimation['proportions'])
+            print('\n')
+
+    
+    if what_to_compare == 'area':
+
+        results_dict =  {'proportions_in_time' : proportions_in_time,
+                         'Wasserstein_distance_in_time': Wasserstein_distance_in_time,
+                            'noise_in_mixture_in_time' : noise, 
+                           'noise_in_reagents_in_time' : noise_in_reagents, 
+                            'proportion_of_noise_in_reagents_in_time': noise_proportions_in_time,
+                           'common_horizontal_axis_in_time' : common_horizontal_axis_list}
+
+    else:
+
+        results_dict =  {'proportions_in_time' : proportions_in_time,
+                        'Wasserstein_distance_in_time': Wasserstein_distance_in_time}
+
+    return results_dict
