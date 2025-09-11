@@ -64,6 +64,10 @@ Magnetstein enables also the analysis of multiple mixtures, for example obtained
 
 <img width="4000" height="2250" alt="main_figure" src="https://github.com/user-attachments/assets/5cd633c7-fe30-40e1-9408-a9cd33734bc1" />
 
+# Visualisations
+
+See `visualization_package/visualization_examples.ipynb`.
+
 # Acknowledgements
 
 Powered by [© Gurobi.](https://www.gurobi.com/)
