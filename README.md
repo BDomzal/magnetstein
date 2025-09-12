@@ -56,7 +56,7 @@ If you are a researcher, we recommend using Gurobi (available for academics at n
 
 # Example: quantification for a single mixture
 
-See `estimation.ipynb` in folder `examples/` to find out how to estimate amounts of components in a single NMR mixture.
+See `estimation.ipynb` in folder `examples/` to find out how to estimate amounts of components in a single NMR mixture. If you need more example data, check out [this repository](https://github.com/BDomzal/magnetstein_data).
 
 # Monitoring chemical reactions
 
