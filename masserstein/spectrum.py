@@ -105,16 +105,16 @@ class Spectrum:
                  zip(isospec.masses, isospec.probs)]
         return confs
 
-    @staticmethod
-    def new_from_fasta(fasta, threshold=0.001, total_prob=None, intensity=1.0,
+    @classmethod
+    def new_from_fasta(cls, fasta, threshold=0.001, total_prob=None, intensity=1.0,
                        empty=False, charge=1, label=None):
-        return Spectrum(get_protein_formula(fasta), threshold=threshold,
+        return cls(get_protein_formula(fasta), threshold=threshold,
                         total_prob=total_prob, intensity=intensity,
                         empty=empty, charge=charge, label=label)
 
-    @staticmethod
-    def new_from_csv(filename, delimiter=","):
-        spectrum = Spectrum(label=filename)
+    @classmethod
+    def new_from_csv(cls, filename, delimiter=","):
+        spectrum = cls(label=filename)
 
         with open(filename, "r") as infile:
             header = next(infile)
@@ -128,9 +128,9 @@ class Spectrum:
         spectrum.merge_confs()
         return spectrum
 
-    @staticmethod
-    def new_random(domain=(0.0, 1.0), peaks=10):
-        ret = Spectrum()
+    @classmethod
+    def new_random(cls, domain=(0.0, 1.0), peaks=10):
+        ret = cls
         confs = []
         for _ in range(peaks):
             confs.append((random.uniform(*domain), random.uniform(0.0, 1.0)))
@@ -199,7 +199,7 @@ class Spectrum:
             self.empty = True
 
     def __add__(self, other):
-        res = Spectrum()
+        res = self.__class__()
         res.confs = self.confs + other.confs
         res.sort_confs()
         res.merge_confs()
@@ -207,7 +207,7 @@ class Spectrum:
         return res
 
     def __mul__(self, number):
-        res = Spectrum()
+        res = self.__class__()
         res.set_confs([(x[0], number*x[1]) for x in self.confs])
         res.label = self.label
         return res
@@ -221,7 +221,7 @@ class Spectrum:
 
     @staticmethod
     def ScalarProduct(spectra, weights):
-        ret = Spectrum()
+        ret = spectra[0].__class__()
         Q = [(spectra[i].confs[0], i, 0) for i in range(len(spectra))]
         heapq.heapify(Q)
         while Q != []:
@@ -577,7 +577,7 @@ class Spectrum:
                 if x1-x0 < mz_distance_threshold:
                     y[qi] = y1 + (target_mz[qi]-x1)*(y0-y1)/(x0-x1)
                 qi += 1
-        return Spectrum(confs = list(zip(target_mz, y)))
+        return self.__class__(confs = list(zip(target_mz, y)))
 
 
     def fuzzify_peaks(self, sd, step):
@@ -697,7 +697,7 @@ class Spectrum:
             other_confs = []
             for other_spectrum in others:
                 other_confs.extend(other_spectrum.confs)
-            other = Spectrum(confs=other_confs)
+            other = self.__class__(confs=other_confs)
         except TypeError:
             other = others
         other_masses = [i[0] for i in other.confs]
@@ -714,7 +714,7 @@ class Spectrum:
                     abs(mz - other_masses[index + 1]) <= margin):
                 result_confs.append((mz, abund))
 
-        result_spectrum = Spectrum(confs=result_confs, label=self.label)
+        result_spectrum = self.__class__(confs=result_confs, label=self.label)
         return result_spectrum
 
     def plot(self, show = True, profile=False, linewidth=1, **plot_kwargs):
