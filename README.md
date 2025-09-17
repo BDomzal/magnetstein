@@ -7,11 +7,53 @@ Magnetstein is a modification of the algorithm from a Python3 package dedicated 
 
 If you encounter any difficulties during installation or usage of these programs, or if you have any suggestions regarding their functionality, please post a GitHub issue or send an email to b.domzal@mimuw.edu.pl. 
 
+# About the method
+
+### When to use Magnetstein
+
+The method demonstrates its full potential when:
+
+- peaks shift (i.e. the positions of peaks are different in mixture's spectrum as opposed to single component's spectrum),
+- peaks from different components overlap,
+- lineshapes are distorted,
+- resolution is low or differs between spectra,
+- spectra contain peaks from different solvents,
+- there are contaminations and/or noise.
+  
+In such circumstances, the Magnetstein algorithm gains an advantage over other tools due to the special properties of the Wasserstein metric that is the core concept of the method. The metric makes the algorithm robust to changes in peaks' locations and shapes, and to ambiguity in assigning signal to particular components due to overlap. The additional refinements make it possible for the algorithm to remove noise from the data.
+
+### What to use as an input
+
+The input should consist of the two crucial parts:
+
+- mixture's spectrum,
+- library, i.e. a set of spectra of individual components expected to be present in the mixture.
+
+### How to interpret and set the values of the parameters
+
+The user can optionally define the values of two parameters: $\kappa_{mixture}$ (a.k.a. `MTD`, Maximum Transport Distance) and $\kappa_{components}$ (a.k.a. `MTD_th`). These are so-called *denoising penalties* that can be interpreted as soft tolerance thresholds for shifting of the signal along the horizontal axis for the spectrum of the mixture and for the spectra in the library, respectively. Another interpretation is viewing $\kappa_{mixture}$ as a certain measure of reliability of the mixture's spectrum. The higher its value, the less likely the algorithm is to remove noise from the spectrum. Similarly, $\kappa_{components}$ reflects our confidence in the purity of the spectra in the library.
+
+If you are unsure about how to set the parameters, we recommend using default values $\kappa_{mixture}=0.25$ and $\kappa_{components}=0.22$. We checked experimentally that such settings produced accurate results for many datasets.
+
+### How to interpret the output
+
+The main output of the algorithm is the list of values:
+
+$$p = \Big(p_{1}, p_{2}, \dots, p_{k}\Big),$$
+
+where $p_{i}$ is the *proportion* of the $i$-th component in the mixture. By *proportions* here we mean the relative amounts of components. Note that $p_{1} + p_{2} + \dots + p_{k}$ does not necessarily equal to 1 due to the presence of noise and contamination. The quantity $p_{0} := 1 - p_{1} - p_{2} - \dots - p_{k}$ is Magnetstein's estimation of the relative amount of the signal coming from the contamination in the mixture's spectrum. Similarly, the quantity $p'_{0}$, also returned by the algorithm, is the Magnestein's estimation of the relative amount of the signal coming from the contamination in the library.
+
+### How to report the results
+
+In order to make the results reproducible, one needs to provide: 1) input data (i.e. mixture's spectrum and library); 2) information about the parameters settings, i.e. chosen values of $\kappa_{mixture}$ and $\kappa_{components}$. This is enough to rerun the analysis.
+
 # Web application
 
 If you don't have programming experience, instead of this Python package you can use our [**web application**.](https://bioputer.mimuw.edu.pl/magnetstein) You can read more about it [here](https://doi.org/10.1016/j.softx.2025.102329).
 
 <img width="1690" height="640" alt="main_page" src="https://github.com/user-attachments/assets/e9214a07-06fd-422a-8355-851a4b889f2a" />
+
+If you prefer to use the Python package, proceed to Installation section.
 
 # Installation
 
