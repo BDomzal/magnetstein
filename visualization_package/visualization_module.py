@@ -38,8 +38,8 @@ def visualize_transport_plan(
         mark_diagonal (bool, optional): Whether diagonal should be marked with thin black line.
         figsize (tuple, optional): Size of the entire figure.
         title (str, optional): Title of the visualization.
-        name_of_first_spectrum (str, optional): Name of mixture (top) spectrum.
-        name_of_second_spectrum (str, optional): Name of components (left) spectrum.
+        name_of_first_spectrum (str, optional): Name of first (top) spectrum.
+        name_of_second_spectrum (str, optional): Name of second (left) spectrum.
         *args, **kwargs: Additional args passed to `scatter()`.
 
     Returns:
