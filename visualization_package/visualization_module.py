@@ -8,17 +8,17 @@ def visualize_transport_plan(
     transport_df,
     mix_confs,
     wsom_confs,
-    experiment_name=None,
-    lower_lim=None,
-    upper_lim=None,
-    figures_path=None,
-    variant=None,
-    cmap='hot_r',
+    figure_path=None,
+    filename=None,
+    cmap='hot',
     point_scaling=20,
     show_colorbar=True,
-    save=True,
+    reverse_scale=True,
+    mark_diagonal=False,
     figsize=(14, 12),
     title="Transport Plan",
+    name_of_first_spectrum='Mixture',
+    name_of_second_spectrum='Components',
     *args,
     **kwargs
 ):
@@ -27,19 +27,19 @@ def visualize_transport_plan(
 
     Args:
         transport_df (pd.DataFrame): Transport matrix (2D) to visualize.
-        mix_confs (np.ndarray): Coordinates of mixture components.
-        wsom_confs (np.ndarray): Coordinates of WSOM components.
-        experiment_name (str, optional): Prefix for saving the plot.
-        lower_lim (int, optional): Lower limit index for region label in filename.
-        upper_lim (int, optional): Upper limit index for region label in filename.
-        figures_path (str, optional): Directory to save the figure.
-        variant (int, optional): Variant index to include in filename.
+        mix_confs (np.ndarray): First spectrum's data in a np.array (ppm values in column 0 and intensity values in column 1).
+        wsom_confs (np.ndarray): Second spectrum's data in a np.array (ppm values in column 0 and intensity values in column 1).
+        figure_path (str, optional): Directory to save the figure. If not specified, figure will not be saved.
+        filename (str, optional): Name of the figure. If not specified, figure will not be saved.
         cmap (str): Matplotlib colormap name.
-        point_scaling (int): Scaling factor for point size in scatter plot.
-        show_colorbar (bool): Whether to display the colorbar.
-        save (bool): Whether to save the figure.
-        figsize (tuple): Size of the entire figure.
-        title (str): Title of the visualization.
+        point_scaling (int, optional): Scaling factor for point size in scatter plot.
+        show_colorbar (bool, optional): Whether to display the colorbar.
+        reverse_scale (bool, optional): Whether to reverse scale in colorbar. If -logarithm was applied to transport_df, then should be set to True.
+        mark_diagonal (bool, optional): Whether diagonal should be marked with thin black line.
+        figsize (tuple, optional): Size of the entire figure.
+        title (str, optional): Title of the visualization.
+        name_of_first_spectrum (str, optional): Name of first (top) spectrum.
+        name_of_second_spectrum (str, optional): Name of second (left) spectrum.
         *args, **kwargs: Additional args passed to `scatter()`.
 
     Returns:
@@ -69,8 +69,8 @@ def visualize_transport_plan(
         *args, **kwargs
     )
 
-    ax_heatmap.set_xlim(-0.5, transport_df.shape[1]-0.5)
-    ax_heatmap.set_ylim(transport_df.shape[0]-0.5, -0.5)
+    ax_heatmap.set_xlim(0, transport_df.shape[1])
+    ax_heatmap.set_ylim(transport_df.shape[0], 0)
     ax_heatmap.set_xticks([])
     ax_heatmap.set_yticks([])
     ax_heatmap.set_title(title)
@@ -80,7 +80,8 @@ def visualize_transport_plan(
     ax_left.plot(wsom_confs[:, 1], wsom_confs[:, 0], color='black', linewidth=1)
     ax_left.invert_xaxis()
     ax_left.set_xticks([])
-    ax_left.set_ylabel('Combination of components', size=12)
+    ax_left.set_ylabel(name_of_second_spectrum, size=12)
+    ax_left.set_ylim(wsom_confs[-1, 0], wsom_confs[0, 0])
 
     # Top subplot (Mixture)
     ax_top = plt.subplot(gs[0, 1])
@@ -89,7 +90,8 @@ def visualize_transport_plan(
     ax_top.xaxis.set_label_position('top')
     ax_top.xaxis.tick_top()
     ax_top.set_yticks([])
-    ax_top.set_title('Mixture', size=12)
+    ax_top.set_title(name_of_first_spectrum, size=12)
+    ax_top.set_xlim(mix_confs[0, 0], mix_confs[-1, 0])
 
     # Align axes limits
     intensity_min = min(ax_left.get_xlim()[1], ax_top.get_ylim()[0])
@@ -104,13 +106,43 @@ def visualize_transport_plan(
         cbar.ax.get_yaxis().labelpad = 30
         cbar.set_ticks([])
         cbar.set_label('Amount of transport', rotation=270, size=12)
+        if reverse_scale:
+            cbar.ax.invert_yaxis()  
+
+    if mark_diagonal:
+        ax_heatmap.plot(
+                        [0, transport_df.shape[1]-1],  # x from left to right
+                        [0, transport_df.shape[0]-1],  # y from top to bottom
+                        color='black',
+                        linewidth=0.5
+                        )
+
+    # Adding vertical and horizontal lines on side figures
+    # diag_mask = transport_df.values.diagonal() > 0
+    # # Vertical lines on ax_top
+    # for x0 in np.where(diag_mask)[0]:
+    #     ax_top.axvline(x=mix_confs[x0, 0], color='black', linewidth=0.5, linestyle='--', zorder=3)
+    # # Horizontal lines on ax_left
+    # for y0 in np.where(diag_mask)[0]:
+    #     ax_left.axhline(y=wsom_confs[y0, 0], color='black', linewidth=0.5, linestyle='--', zorder=3)
+
+    # Adding vertical and horizontal lines on main figure
+    # diag_mask = transport_df.values.diagonal() > 0
+    # for x0 in np.where(diag_mask)[0]:
+    #     ax_heatmap.plot(
+    #         [x0, x0], [0, transport_df.shape[0]-1],
+    #         color='black', linewidth=0.5, linestyle='-', zorder=5
+    #     )
+
+    # for y0 in np.where(diag_mask)[0]:
+    #     ax_heatmap.plot(
+    #         [0, transport_df.shape[1]-1], [y0, y0],
+    #         color='black', linewidth=0.5, linestyle='-', zorder=5
+    #     )
 
     # Save figure
-    if save and figures_path is not None and experiment_name is not None and lower_lim is not None and upper_lim is not None:
-        filename = f"{experiment_name}_region_{lower_lim}_{upper_lim}"
-        if variant is not None:
-            filename = f"{experiment_name}_variant_{variant+1}_region_{lower_lim}_{upper_lim}"
-        plt.savefig(f"{figures_path}/{filename}.png", dpi=300, bbox_inches='tight')
+    if figure_path is not None and filename is not None:
+        plt.savefig(f"{figure_path}/{filename}.png", dpi=300, bbox_inches='tight')
 
     plt.show()
 
