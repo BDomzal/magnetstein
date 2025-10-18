@@ -780,7 +780,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         scaling_factor = 1.0/math.fsum(v[1] for v in exp_confs)
         exp_confs = [(v[0], v[1]*scaling_factor) for v in exp_confs]
 
-    assert abs(sum(x[1] for x in exp_confs) - 1.) < 1e-08, "The mixture's spectrum is not normalized."
+    assert abs(sum(x[1] for x in exp_confs) - 1.) < 1e-08, "Numerical error occured during normalization. The mixture's spectrum is not normalized."
                            
     k = len(query)
     proportions = [0.]*k
@@ -806,7 +806,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
             scaling_factor = 1.0/math.fsum(v[1] for v in q_confs)
             q_confs = [(v[0], v[1]*scaling_factor) for v in q_confs]
 
-        assert abs(sum(x[1] for x in q_confs) - 1.) < 1e-08, "Component's spectrum is not normalized."
+        assert abs(sum(x[1] for x in q_confs) - 1.) < 1e-08, "Numerical error occured during normalization. Component's spectrum is not normalized."
 
         if not nmr:
             assert all(x[0] >= 0 for x in q.confs), "Component's spectrum %i has negative masses!" %i
