@@ -17,8 +17,8 @@ def visualize_transport_plan(
     mark_diagonal=False,
     figsize=(14, 12),
     title="Transport Plan",
-    name_of_mixture='Mixture',
-    name_of_components='Components',
+    name_of_first_spectrum='Mixture',
+    name_of_second_spectrum='Components',
     *args,
     **kwargs
 ):
@@ -27,8 +27,8 @@ def visualize_transport_plan(
 
     Args:
         transport_df (pd.DataFrame): Transport matrix (2D) to visualize.
-        mix_confs (np.ndarray): Coordinates of mixture components.
-        wsom_confs (np.ndarray): Coordinates of WSOM components.
+        mix_confs (np.ndarray): First spectrum's data in a np.array (ppm values in column 0 and intensity values in column 1).
+        wsom_confs (np.ndarray): Second spectrum's data in a np.array (ppm values in column 0 and intensity values in column 1).
         figure_path (str, optional): Directory to save the figure. If not specified, figure will not be saved.
         filename (str, optional): Name of the figure. If not specified, figure will not be saved.
         cmap (str): Matplotlib colormap name.
@@ -38,8 +38,8 @@ def visualize_transport_plan(
         mark_diagonal (bool, optional): Whether diagonal should be marked with thin black line.
         figsize (tuple, optional): Size of the entire figure.
         title (str, optional): Title of the visualization.
-        name_of_mixture (str, optional): Name of mixture (top) spectrum.
-        name_of_components (str, optional): Name of components (left) spectrum.
+        name_of_first_spectrum (str, optional): Name of mixture (top) spectrum.
+        name_of_second_spectrum (str, optional): Name of components (left) spectrum.
         *args, **kwargs: Additional args passed to `scatter()`.
 
     Returns:
@@ -80,7 +80,7 @@ def visualize_transport_plan(
     ax_left.plot(wsom_confs[:, 1], wsom_confs[:, 0], color='black', linewidth=1)
     ax_left.invert_xaxis()
     ax_left.set_xticks([])
-    ax_left.set_ylabel(name_of_components, size=12)
+    ax_left.set_ylabel(name_of_second_spectrum, size=12)
     ax_left.set_ylim(wsom_confs[-1, 0], wsom_confs[0, 0])
 
     # Top subplot (Mixture)
@@ -90,7 +90,7 @@ def visualize_transport_plan(
     ax_top.xaxis.set_label_position('top')
     ax_top.xaxis.tick_top()
     ax_top.set_yticks([])
-    ax_top.set_title(name_of_mixture, size=12)
+    ax_top.set_title(name_of_first_spectrum, size=12)
     ax_top.set_xlim(mix_confs[0, 0], mix_confs[-1, 0])
 
     # Align axes limits
