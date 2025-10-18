@@ -10,7 +10,7 @@ def visualize_transport_plan(
     wsom_confs,
     figure_path=None,
     filename=None,
-    cmap='hot_r',
+    cmap='hot',
     point_scaling=20,
     show_colorbar=True,
     reverse_scale=True,
