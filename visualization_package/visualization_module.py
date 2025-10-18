@@ -81,6 +81,7 @@ def visualize_transport_plan(
     ax_left.invert_xaxis()
     ax_left.set_xticks([])
     ax_left.set_ylabel(name_of_components, size=12)
+    ax_left.set_ylim(wsom_confs[-1, 0], wsom_confs[0, 0])
 
     # Top subplot (Mixture)
     ax_top = plt.subplot(gs[0, 1])
@@ -90,6 +91,7 @@ def visualize_transport_plan(
     ax_top.xaxis.tick_top()
     ax_top.set_yticks([])
     ax_top.set_title(name_of_mixture, size=12)
+    ax_top.set_xlim(mix_confs[0, 0], mix_confs[-1, 0])
 
     # Align axes limits
     intensity_min = min(ax_left.get_xlim()[1], ax_top.get_ylim()[0])
@@ -114,6 +116,29 @@ def visualize_transport_plan(
                         color='black',
                         linewidth=0.5
                         )
+
+    # Adding vertical and horizontal lines on side figures
+    # diag_mask = transport_df.values.diagonal() > 0
+    # # Vertical lines on ax_top
+    # for x0 in np.where(diag_mask)[0]:
+    #     ax_top.axvline(x=mix_confs[x0, 0], color='black', linewidth=0.5, linestyle='--', zorder=3)
+    # # Horizontal lines on ax_left
+    # for y0 in np.where(diag_mask)[0]:
+    #     ax_left.axhline(y=wsom_confs[y0, 0], color='black', linewidth=0.5, linestyle='--', zorder=3)
+
+    # Adding vertical and horizontal lines on main figure
+    # diag_mask = transport_df.values.diagonal() > 0
+    # for x0 in np.where(diag_mask)[0]:
+    #     ax_heatmap.plot(
+    #         [x0, x0], [0, transport_df.shape[0]-1],
+    #         color='black', linewidth=0.5, linestyle='-', zorder=5
+    #     )
+
+    # for y0 in np.where(diag_mask)[0]:
+    #     ax_heatmap.plot(
+    #         [0, transport_df.shape[1]-1], [y0, y0],
+    #         color='black', linewidth=0.5, linestyle='-', zorder=5
+    #     )
 
     # Save figure
     if figure_path is not None and filename is not None:
