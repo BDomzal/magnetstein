@@ -4,7 +4,6 @@ from masserstein import Spectrum
 from masserstein import NMRSpectrum
 import pulp as lp
 from warnings import warn
-import tempfile
 from tqdm import tqdm
 from pulp.apis import LpSolverDefault
 from masserstein import misc
