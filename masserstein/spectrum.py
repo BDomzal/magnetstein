@@ -130,7 +130,7 @@ class Spectrum:
 
     @classmethod
     def new_random(cls, domain=(0.0, 1.0), peaks=10):
-        ret = cls
+        ret = cls()
         confs = []
         for _ in range(peaks):
             confs.append((random.uniform(*domain), random.uniform(0.0, 1.0)))
