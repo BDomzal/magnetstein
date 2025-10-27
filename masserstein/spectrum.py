@@ -1,7 +1,7 @@
 import math
 import IsoSpecPy
 import numpy as np
-from scipy.stats import norm, uniform, gamma
+from scipy.stats import uniform, gamma
 import random
 import heapq
 import re
