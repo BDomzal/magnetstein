@@ -3,6 +3,7 @@ import pandas as pd
 import pulp
 from matplotlib.colors import LinearSegmentedColormap
 from masserstein import NMRSpectrum, estimate_proportions
+from scipy.sparse import csr_matrix
 
 #Function written by Krzysztof Zakrzewski (B. Miasojedow's master's student)
 def shift_and_mix(spectra, shifts, probs):
@@ -182,3 +183,29 @@ def retrieve_transport_plan(mix, spectra, interesting_region, kappa_mixture, kap
     sum_noise_in_components = sum(noise_in_components)
 
     return transport_df, mix_confs, wsom_confs, distances, sum_noise_in_mix, sum_noise_in_components
+
+
+def analyse_deflection_from_diagonal(transport_df):
+
+    transport_df_sparse = csr_matrix(transport_df.values)
+    
+    nonzero_rows, nonzero_cols = transport_df_sparse.nonzero()
+    
+    rows_indices = transport_df.columns[nonzero_rows]
+    cols_indices = transport_df.columns[nonzero_cols]
+    
+    below_diagonal = rows_indices<cols_indices
+    above_diagonal = rows_indices>cols_indices
+    
+    rows_indices_below = rows_indices[below_diagonal]
+    cols_indices_below = cols_indices[below_diagonal]
+    rows_indices_above = rows_indices[above_diagonal]
+    cols_indices_above = cols_indices[above_diagonal]
+    
+    nonzero_vals_below = transport_df_sparse.data[below_diagonal]
+    nonzero_vals_above = transport_df_sparse.data[above_diagonal]
+    
+    distances_below = np.array((cols_indices_below - rows_indices_below)*(1/np.sqrt(2)))
+    distances_above = np.array((rows_indices_above - cols_indices_above)*(1/np.sqrt(2)))
+    
+    return nonzero_vals_below, nonzero_vals_above, distances_below, distances_above
