@@ -81,7 +81,6 @@ This will install the `masserstein` package for the current user (including NMR 
 
 You will also need to have the following packages installed (all available via pip):
 
-* `IsoSpecPy`
 * `numpy`
 * `scipy`
 * `PuLP`

@@ -1,5 +1,4 @@
 import math
-import IsoSpecPy
 import numpy as np
 from scipy.stats import uniform, gamma
 import random
@@ -75,36 +74,6 @@ class Spectrum:
             self.empty = True
             self.confs = []
 
-    @staticmethod
-    def confs_from_formula(formula, threshold=0.001, total_prob=None,
-                           charge=1, adduct=None):
-        """Simulate and return spectrum peaks for given formula.
-
-        Parameters as in __init__ method. `formula` must be a nonempty string.
-        """
-        parsed = re.findall('([A-Z][a-z]*)([0-9]*)', formula)
-        formula = Counter()
-        for e, n in parsed:
-            n = int(n) if n else 1
-            formula[e] += n
-        if adduct:
-            formula[adduct] += charge
-        assert all(v >= 0 for v in formula.values())
-        formula = ''.join(x+str(formula[x]) for x in formula if formula[x])
-        if total_prob is not None:
-            isospec = IsoSpecPy.IsoTotalProb(formula=formula,
-                                             prob_to_cover=total_prob,
-                                             get_minimal_pset=True,
-                                             get_confs=False)
-        else:
-            isospec = IsoSpecPy.IsoThreshold(formula=formula,
-                                             threshold=threshold,
-                                             absolute=False,
-                                             get_confs=False)
-        confs = [(x[0]/abs(charge), x[1]) for x in
-                 zip(isospec.masses, isospec.probs)]
-        return confs
-
     @classmethod
     def new_from_fasta(cls, fasta, threshold=0.001, total_prob=None, intensity=1.0,
                        empty=False, charge=1, label=None):
@@ -149,14 +118,6 @@ class Spectrum:
         Return a (deep) copy of self
         """
         return deepcopy(self)
-
-    # def copy(self):
-    #     isospec = self.isospec
-    #     self.isospec = None
-    #     ret = deepcopy(self)
-    #     ret.isospec = isospec
-    #     self.isospec = isospec
-    #     return ret
 
     def get_modal_peak(self):
         """
