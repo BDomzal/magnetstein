@@ -1,5 +1,6 @@
 # Magnetstein: NMR spectra analysis tool
-![main_workflow_final](https://github.com/BDomzal/magnetstein/assets/65540968/f3c35cfb-e996-4f2a-b01b-3007a7676bd0)
+
+<img width="2500" height="1875" alt="main_workflow_final_white_background" src="https://github.com/user-attachments/assets/b1ced18b-727c-4676-8e82-bfffe9dc4f34" />
 
 This repository contains software tools which allow to compare nuclear magnetic resonance (NMR) spectra and solve quantification task, i.e. estimate amounts of components in a mixture using the Wasserstein distance. Find out more [here.](https://doi.org/10.1021/acs.analchem.3c03594)
 
