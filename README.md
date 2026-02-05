@@ -14,21 +14,23 @@ If you encounter any difficulties during installation or usage of these programs
 
 The method demonstrates its full potential when:
 
-- peaks shift (i.e. the positions of peaks are different in mixture's spectrum as opposed to single component's spectrum),
-- peaks from different components overlap,
+- peaks shift (i.e. the positions of peaks are different in spectrum of a mixture as opposed to spectra of single components),
+- peaks coming from different components overlap with each other,
 - lineshapes are distorted,
 - resolution is low or differs between spectra,
-- spectra contain peaks from different solvents,
+- spectra contain peaks coming from different solvents,
 - there are contaminations and/or noise.
   
-In such circumstances, the Magnetstein algorithm gains an advantage over other tools due to the special properties of the Wasserstein metric that is the core concept of the method. The metric makes the algorithm robust to changes in peaks' locations and shapes, and to ambiguity in assigning signal to particular components due to overlap. The additional refinements make it possible for the algorithm to remove noise from the data.
+In such circumstances, the Magnetstein algorithm gains an advantage over other tools due to the special properties of the Wasserstein metric that is the core concept of the method. The metric makes the algorithm robust to changes in peak locations and shapes, and to ambiguity in assigning signal to particular components due to overlap. The additional refinements make it possible for the algorithm to remove noise from the data.
 
 ### What to use as an input
 
 The input should consist of the two crucial parts:
 
-- mixture's spectrum,
+- spectrum of a mixture,
 - library, i.e. a set of spectra of individual components expected to be present in the mixture.
+
+Note that if provided library is overspecified (i.e. contains spectra of components that are not present in the mixture), the algorithm is going to estimate the proportions of these excessive components as zeros. On the other hand, if library is underspecified (i.e. some of the components present in the mixture are not present in the library), the algorithm is going to treat signal coming from missing components as noise. Then, the output of the algorithm will contain, i.a., the joint proportion of the missing components and the actual noise.
 
 ### How to interpret and set the values of the parameters
 
