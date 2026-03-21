@@ -10,6 +10,8 @@ If you encounter any difficulties during installation or usage of these programs
 
 # About the method
 
+<img width="2700" height="1200" alt="all_components_variant_2" src="https://github.com/user-attachments/assets/95d4215e-3eca-441f-a5a7-e99e720122f5" />
+
 ### When to use Magnetstein
 
 The method demonstrates its full potential when:
