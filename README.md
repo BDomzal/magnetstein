@@ -1,4 +1,4 @@
-# <img src="https://github.com/user-attachments/assets/008fa262-7fa1-458c-a8fc-f4f6e3a2022a" align="left" height="80" width="60"/>Magnetstein: NMR spectra analysis tool
+# <img src="https://github.com/user-attachments/assets/008fa262-7fa1-458c-a8fc-f4f6e3a2022a" align="left" style="width:6%; height:auto;"/>Magnetstein: NMR spectra analysis tool
 
 <img width="2500" height="1875" alt="main_workflow_final_white_background" src="https://github.com/user-attachments/assets/b1ced18b-727c-4676-8e82-bfffe9dc4f34" />
 
