@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pulp
 from matplotlib.colors import LinearSegmentedColormap
-from masserstein import NMRSpectrum, estimate_proportions
+from magnetstein import NMRSpectrum, estimate_proportions
 from scipy.sparse import csr_matrix
 
 #Function written by Krzysztof Zakrzewski (B. Miasojedow's master's student)

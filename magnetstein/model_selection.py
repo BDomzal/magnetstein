@@ -74,7 +74,7 @@ def calculate_metrics_for_randomizations(spectrum, elements=None, n_replications
 
 
 # tmp tests
-from masserstein.spectrum import Spectrum
+from magnetstein.spectrum import Spectrum
 
 s1 = Spectrum("H")
 s2 = Spectrum("C")

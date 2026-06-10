@@ -1,4 +1,4 @@
-from masserstein import Spectrum
+from magnetstein import Spectrum
 
 class NMRSpectrum(Spectrum):
     def __init__(self, formula='', threshold=0.001, total_prob=None,

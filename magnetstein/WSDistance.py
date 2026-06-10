@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-from masserstein import Spectrum
+from magnetstein import Spectrum
 from getopt import getopt
 from functools import reduce
 import numpy as np

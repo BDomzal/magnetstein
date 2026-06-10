@@ -1,6 +1,6 @@
 #! /usr/bin/python3
-from masserstein import Spectrum
-from masserstein import estimate_proportions
+from magnetstein import Spectrum
+from magnetstein import estimate_proportions
 from getopt import getopt
 import numpy as np
 import sys
@@ -10,7 +10,7 @@ doc = """NAME:
     WSDeconv
 
 USAGE:
-    python3 WSDeconv [OPTIONS] MASS_SPECTRUM MOLECULE_LIST [OUTPUT]
+    python3 WSDeconv [OPTIONS] NMR_SPECTRUM MOLECULE_LIST [OUTPUT]
 
 EXAMPLES:
     python3 WSDeconv examples/small_molecule_spectrum.txt "C2H5OH,C3H8,C2H4"
@@ -19,7 +19,7 @@ EXAMPLES:
 
 DESCRIPTION:
     Deconvolves overlapping isotopic distributions and returns their proportions.
-    MASS_SPECTRUM file contains the subject spectrum in a peak list format.
+    NMR_SPECTRUM file contains the subject spectrum in a peak list format.
     MOLECULE_LIST is either an elemental formula, or a file with a list of
     elemental formulas of ions which proportions in the spectrum are to be estimated.
     Lines starting with a hash # in any file are treated as comments and skipped.
@@ -90,7 +90,7 @@ to_add_when_implemented = """
     """
 
 mass_warning = """
-WARNING: Detected a large-distance mass transport between masses %.2f and %.2f.
+WARNING: Detected a large-distance mass transport between ppms %.2f and %.2f.
 Please report this to the authors.
 """
 

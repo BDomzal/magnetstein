@@ -1,12 +1,12 @@
 import numpy as np
 from time import time
-from masserstein import Spectrum
-from masserstein import NMRSpectrum
+from magnetstein import Spectrum
+from magnetstein import NMRSpectrum
 import pulp as lp
 from warnings import warn
 from tqdm import tqdm
 from pulp.apis import LpSolverDefault
-from masserstein import misc
+from magnetstein import misc
 import math
 from copy import deepcopy
 

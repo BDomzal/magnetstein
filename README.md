@@ -1,4 +1,4 @@
-# <img src="https://github.com/user-attachments/assets/c2de3347-90c2-4927-b9e4-561ed366d8ff" align="left" height="80" width="60"/>Magnetstein: NMR spectra analysis tool
+# <img src="https://github.com/user-attachments/assets/008fa262-7fa1-458c-a8fc-f4f6e3a2022a" align="left" style="width:6%; height:auto;"/>Magnetstein: NMR spectra analysis tool
 
 <img width="2500" height="1875" alt="main_workflow_final_white_background" src="https://github.com/user-attachments/assets/b1ced18b-727c-4676-8e82-bfffe9dc4f34" />
 
@@ -82,7 +82,7 @@ in the commandline. Then, install the package by running the `setup.py` file:
 python3 setup.py install --user
 ```
 
-This will install the `masserstein` package for the current user (including NMR spectroscopy tool Magnetstein).  
+This will install the `magnetstein` package for the current user.
 
 You will also need to have the following packages installed (all available via pip):
 

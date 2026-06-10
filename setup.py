@@ -38,7 +38,7 @@ setup(
     # There are some restrictions on what makes a valid project name
     # specification here:
     # https://packaging.python.org/specifications/core-metadata/#name
-    name='masserstein',  # Required
+    name='magnetstein',  # Required
 
     # Versions should comply with PEP 440:
     # https://www.python.org/dev/peps/pep-0440/
@@ -51,7 +51,7 @@ setup(
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#summary
-    description='A library for analysis of Mass Spectrometry data using the Wasserstein metric',  # Optional
+    description='Tools for quantitative analysis of nuclear magnetic resonance (NMR) spectra using the Wasserstein metric.',  # Optional
 
     # This is an optional longer description of your project that represents
     # the body of text which users will see when they visit PyPI.
@@ -126,7 +126,7 @@ setup(
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='mass spectrometry spectral deconvolution',  # Optional
+    keywords='NMR spectroscopy, nuclear magnetic resonance, quantification, complex mixture analysis, the Wasserstein distance, deconvolution, regression, qNMR',  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().
@@ -138,7 +138,7 @@ setup(
     #   py_modules=["my_module"],
     #
     #packages=find_packages(exclude=['contrib', 'docs', 'tests']),  # Required
-    packages = ['masserstein'],
+    packages = ['magnetstein'],
 
     # Specify which Python versions you support. In contrast to the
     # 'Programming Language' classifiers above, 'pip install' will check this
@@ -153,7 +153,7 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['IsoSpecPy', 'numpy', 'scipy', 'pulp', 'tqdm'],
+    install_requires=['numpy', 'scipy', 'pulp', 'tqdm'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
@@ -198,8 +198,8 @@ setup(
 
     entry_points = {
         'console_scripts': [
-            'WSDistance=masserstein.WSDistance:main',
-            'WSDeconv=masserstein.WSDeconv:main'
+            'WSDistance=magnetstein.WSDistance:main',
+            'WSDeconv=magnetstein.WSDeconv:main'
             ]
     }
 
