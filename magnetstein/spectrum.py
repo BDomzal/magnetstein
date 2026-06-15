@@ -678,7 +678,7 @@ class Spectrum:
         result_spectrum = self.__class__(confs=result_confs, label=self.label)
         return result_spectrum
 
-    def plot(self, show = True, profile=False, linewidth=1, **plot_kwargs):
+    def plot(self, show = True, profile=True, linewidth=1, **plot_kwargs):
         """
         Plots the spectrum.
         The keyword argument show is retained for backwards compatibility.
@@ -695,7 +695,7 @@ class Spectrum:
             plt.show()
 
     @staticmethod
-    def plot_all(spectra, show=True, profile=False, cmap=None, **plot_kwargs):
+    def plot_all(spectra, show=True, profile=True, cmap=None, **plot_kwargs):
         """
         Shows the supplied list of spectra on a single plot.
         """

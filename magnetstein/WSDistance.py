@@ -13,14 +13,15 @@ USAGE:
     python WSDistance.py [OPTIONS] FILE1 FILE2
 
 EXAMPLES:
-    python WSDistance.py examples/ethanol.txt examples/acetic_acid.txt
-    python WSDistance.py -t 1. -s examples/ethanol.txt examples/propane.txt
+    python WSDistance.py examples/preprocessed_comp0.csv examples/preprocessed_comp1.csv
+    python WSDistance.py -t 1. -s examples/preprocessed_comp0.csv examples/preprocessed_comp1.csv
 
 DESCRIPTION:
     Computes the Wasserstein distance between two spectra.
     The two spectra need to be supplied as peak lists in separate files (FILE1, FILE2).
     Each file should be composed of two tab-separated columns.
-    The first column corresponds to m/z values, the second one to peak intensity (ion current).
+    The first column corresponds to the horizontal axis (chemical shift or m/z, depeneding on the spectroscopy type).
+    The second one to peak intensity (vertical axis).
     A header can be present, starting with a hash sign #.
     Any line starting with # will be ommitted.
     The supplied spectra do not need to have normalized peak intensities.
@@ -28,13 +29,13 @@ DESCRIPTION:
 
 RETURNS:
     By default, the Wasserstein distance is printed to stdout, together with the program configuration.
-    Optionally, mass transport can be printed to stdout as well. The mass transport is
-    represented as a table with three columns, corresponding to the origin m/z, the target m/z,
-    and the amount of transported intensity.
+    Optionally, transport plan can be printed to stdout as well. The transport plan is
+    represented as a table with three columns, corresponding to the origin position (on the horizontal axis), 
+    the target position (on the horizontal axis), and the amount of transported intensity.
 
 OPTIONS:
     -s
-        Print the optimal mass transport scheme.
+        Print the optimal transport plan scheme.
     -t: float
         The total intensity that is to remain in a spectrum after denoising.
         Default: 0.99, which means that peaks corresponding to at most 0.01 of the intensity
@@ -44,7 +45,7 @@ OPTIONS:
         Print this message and exit.
 
 CONTACT:
-    If you encounter any problems during use of this application, please email me at m_ciach@student.uw.edu.pl.
+    If you encounter any problems during use of this application, please email me at b.domzal@mimuw.edu.pl.
 """
 
 def main():

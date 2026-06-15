@@ -218,9 +218,9 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         thr_confs = [thr_sp.confs.copy() for thr_sp in thr_sps]
 
         # Normalization check:
-        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized."
+        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum is not normalized."
         for i, thrcnf in enumerate(thr_confs):
-                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized." % i
+                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i is not normalized." % i
 
         # Computing a common horizontal axis for all spectra
         exp_confs = [(m, i) for m, i in exp_confs]
@@ -367,9 +367,9 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         thr_confs = [thr_sp.confs.copy() for thr_sp in thr_sps]
 
         # Normalization check:
-        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized."
+        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum is not normalized."
         for i, thrcnf in enumerate(thr_confs):
-                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized." % i
+                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i is not normalized." % i
 
         # Computing a common horizontal axis for all spectra
         exp_confs = [(m, i) for m, i in exp_confs]
@@ -538,9 +538,9 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         thr_confs = [thr_sp.confs.copy() for thr_sp in thr_sps]
 
         # Normalization check:
-        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized."
+        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum is not normalized."
         for i, thrcnf in enumerate(thr_confs):
-                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized." % i
+                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i is not normalized." % i
 
         # Computing a common horizontal axis for all spectra
         exp_confs = [(m, i) for m, i in exp_confs]
@@ -750,7 +750,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     try:
         exp_confs = spectrum.confs
     except:
-        print("Could not retrieve the confs list. Is the supplied spectrum an object of class Spectrum?")
+        print("Could not retrieve the confs list. Is the supplied spectrum an object of class (NMR)Spectrum?")
         raise
 
     
@@ -758,7 +758,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
 
     if what_to_compare=='concentration':
         for i, sp in enumerate(query):
-                assert sp.protons is not None, "Component " + str(i) +" doesn't have the number of protons defined. Please define sp.protons attribute."
+                assert sp.protons is not None, "Component " + str(i) +" doesn't have the number of NMR-active nuclei defined. Please define it by setting 'protons' attribute."
 
     is_NMR_spectrum = [isinstance(sp, NMRSpectrum) for sp in [spectrum] + query]
     assert all(is_NMR_spectrum) or not any(is_NMR_spectrum), 'Spectra provided are of mixed types. \
@@ -766,7 +766,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     nmr = all(is_NMR_spectrum)
 
     if not nmr:
-        assert all(x[0] >= 0. for x in exp_confs), 'Found peaks with negative masses!'
+        assert all(x[0] >= 0. for x in exp_confs), 'Found peaks with negative positions on the horizontal axis!'
 
     if any(x[1] < 0 for x in exp_confs):
         print("The mixture's spectrum cannot contain negative intensities. ")
@@ -808,7 +808,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         assert abs(sum(x[1] for x in q_confs) - 1.) < 1e-08, "Numerical error occured during normalization. Component's spectrum is not normalized."
 
         if not nmr:
-            assert all(x[0] >= 0 for x in q.confs), "Component's spectrum %i has negative masses!" %i
+            assert all(x[0] >= 0 for x in q.confs), "Component's spectrum %i has negative positions on the horizontal axis!" %i
             preprocessed_query.append(Spectrum(confs=q_confs))
         else:
             preprocessed_query.append(NMRSpectrum(confs=q_confs, protons=query[i].protons))
@@ -833,8 +833,9 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
 
     envelope_bounds.sort(key=lambda x: x[0])  # sorting by lower bounds
     if verbose:
-        print("Removed components' spectra due to no matching peaks in mixture's spectrum:", filtered)
-        print('Envelope bounds:', envelope_bounds)
+        if filtered:
+            print("Removed components' spectra due to no matching peaks in mixture's spectrum:", filtered)
+        print('Bounds:', envelope_bounds)
 
     # Computing chunks
     chunkIDs = [0]*k  # Grouping of components' spectra
@@ -886,7 +887,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     exp_conf_chunks.append(matching_confs)
     chunk_TICs = [sum(exp_confs[i][1] for i in chunk_list) for chunk_list in exp_conf_chunks]
     if verbose:
-        print("Ion currents in chunks:", chunk_TICs)
+        print("Total masses in chunks:", chunk_TICs)
 
     # Deconvolving chunks:
     p0_prime = 0
