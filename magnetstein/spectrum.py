@@ -7,17 +7,14 @@ import re
 from collections import Counter
 import numpy.random as rd
 from scipy.signal import argrelmax
-from .peptides import get_protein_formula
 from warnings import warn
 from copy import deepcopy
 
 class Spectrum:
-    def __init__(self, formula='', threshold=0.001, total_prob=None,
-                 charge=1, adduct=None, confs=None, label=None, **other):
+    def __init__(self, confs=None, protons=None, label=None, **other):
         """Initialize a Spectrum class.
 
-        Initialization can be done either by simulating a spectrum of an ion
-        with a given formula and charge, or setting a peak list.
+        Initialization can be done by setting a peak list.
 
         The initialized spectrum is not normalised. In order to do this use
         normalize method.
@@ -25,61 +22,22 @@ class Spectrum:
         Parameters
         ----------
 
-        formula: str
-            The chemical formula of the molecule. If empty, then `confs`
-            cannot be None. If the formula is a valid chemical formula then
-            spectrum peaks (`confs`) are simulated.
-        threshold: float
-            Lower threshold on the intensity of simulated peaks. Used when
-            `formula` is not an empty string, ignored when `total_prob` is not
-            None.
-        total_prob: float
-            Lower bound on the total probability of simulated peaks, i.e.
-            fraction of all potential signal, which will be simulated. Used
-            when `formula` is not an empty string. When not None, then
-            `threshold` value is ignored.
-        charge: int
-            A charge of the ion.
-        adduct: str
-            The ionizing element. When not None, then formula is updated
-            with `charge` number of adduct atoms.
         confs: list
-            A list of tuples of mz and intensity. Confs contains peaks of an
-            initialized spectrum. If not None, then `formula` needs be an empty
-            string.
+            A list of tuples of frequency and intensity.
+
         label: str
             An optional spectrum label.
+
         """
-        ### TODO2: seprarate subclasses for centroid & profile spectra
-        self.formula = formula
-        self.empty = False
+        self.protons = protons
+        self.label = label
 
-        if label is None:
-            self.label = formula
-        else:
-            self.label = label
-
-        self.charge = charge
-
-        if formula != '' and confs is not None:
-            raise ValueError(
-                "Formula and confs cannot be set at the same time!")
-        elif confs is not None:
+        if confs is not None:
             self.set_confs(confs)
-        elif formula != '':
-            self.set_confs(
-                self.confs_from_formula(
-                    formula, threshold, total_prob, charge, adduct))
+            self.empty = False
         else:
             self.empty = True
             self.confs = []
-
-    @classmethod
-    def new_from_fasta(cls, fasta, threshold=0.001, total_prob=None, intensity=1.0,
-                       empty=False, charge=1, label=None):
-        return cls(get_protein_formula(fasta), threshold=threshold,
-                        total_prob=total_prob, intensity=intensity,
-                        empty=empty, charge=charge, label=label)
 
     @classmethod
     def new_from_csv(cls, filename, delimiter=","):
@@ -106,9 +64,9 @@ class Spectrum:
         ret.set_confs(confs)
         return ret
 
-    def average_mass(self):
+    def average_frequency(self):
         """
-        Returns the average mass.
+        Returns the average frequency.
         """
         norm = float(sum(x[1] for x in self.confs))
         return sum(x[0]*x[1]/norm for x in self.confs)
@@ -119,7 +77,7 @@ class Spectrum:
         """
         return deepcopy(self)
 
-    def get_modal_peak(self):
+    def get_highest_peak(self):
         """
         Returns the peak with the highest intensity.
         """
@@ -127,13 +85,13 @@ class Spectrum:
 
     def sort_confs(self):
         """
-        Sorts configurations by their mass.
+        Sorts configurations by their first coordinate.
         """
         self.confs.sort(key = lambda x: x[0])
 
     def merge_confs(self):
         """
-        Merges configurations with an identical mass, summing their intensities.
+        Merges configurations with an identical locations on horizontal axis, summing their intensities.
         """
         if not self.empty:
             cmass = self.confs[0][0]
@@ -229,7 +187,7 @@ class Spectrum:
     def explained_intensity(self,other):
         """
         Returns the amount of mutual intensity between self and other,
-        defined as sum of minima of intensities, mass-wise.
+        defined as sum of minima of intensities, pointwise.
         """
         e = 0
         for i in range(len(self.confs)):
@@ -238,24 +196,21 @@ class Spectrum:
 
     def bin_to_nominal(self, nb_of_digits=0):
         """
-        Rounds mass values to a given number of decimal digits.
+        Rounds values on the horizontal axis to a given number of decimal digits.
         Works in situ, returns None.
-        The masses are multiplied by the charge prior to rounding,
-        and divided by the charge again after rounding.
-        The default nb_of_digits is zero, meaning that the m/z values
-        will correspond to nominal mass of peaks.
+        The default nb_of_digits is zero.
         """
         xcoord, ycoord = zip(*self.confs)
-        xcoord = map(lambda x: x*self.charge, xcoord)
+        xcoord = map(lambda x: x, xcoord)
         xcoord = (xcoord[0] + round(x-xcoord[0], nb_of_digits) for x in xcoord)
-        xcoord = map(lambda x: x/self.charge, xcoord)
+        xcoord = map(lambda x: x, xcoord)
         self.confs = list(zip(xcoord, ycoord))
         self.sort_confs()
         self.merge_confs()
 
     def coarse_bin(self, nb_of_digits):
         """
-        Rounds the m/z to a given number of decimal digits
+        Rounds the values on the horizontal axis to a given number of decimal digits
         """
         self.confs = [(round(x[0], nb_of_digits), x[1]) for x in self.confs]
         self.merge_confs()
@@ -264,8 +219,8 @@ class Spectrum:
         """
         Add additional peaks that simulate chemical noise.
 
-        The method adds additional peaks with uniform distribution in the m/z
-        domain and gamma distribution in the intensity domain. The spectrum
+        The method adds additional peaks with uniform distribution on the horizontal axis
+         and gamma distribution in the intensity domain. The spectrum
         does NOT need to be normalized. Accordingly, the method does not
         normalize the intensity afterwards! Works in-situ (on self).
 
@@ -276,8 +231,8 @@ class Spectrum:
         noise_fraction : float
             The amount of noise signal in the spectrum, >= 0 and <= 1.
         span: float or 2-tuple of floats
-           If float, then `span` specifies a factor by which the m/z range is
-           increased. If 2-tuple, then `span` specifies m/z range, which is
+           If float, then `span` specifies a factor by which the range is
+           increased. If 2-tuple, then `span` specifies range, which is
            noised.
 
         Returns
@@ -314,17 +269,15 @@ class Spectrum:
     def distort_intensity(self, N, gain, sd):
         """
         Distorts the intensity measurement in a mutiplicative noise model - i.e.
-        assumes that each ion yields a random amount of signal.
-        Assumes the molecule is composed of one element, so it's
-        an approximation for normal molecules.
+        assumes that each molecule yields a random amount of signal.
         The resulting spectrum is not normalized.
         Works in situ (modifies self).
         N: int
-            number of ions
+            number of molecules
         gain: float
-            mean amount of signal of one ion
+            mean amount of signal of one peak
         sd: float
-            standard deviation of one ion's signal
+            standard deviation of one peak
 
         Return: np.array
             The applied deviations.
@@ -339,9 +292,9 @@ class Spectrum:
         self.confs = X
         return U
 
-    def distort_mz(self, mean, sd):
+    def distort_horizontal_axis(self, mean, sd):
         """
-        Distorts the m/z measurement by a normally distributed
+        Distorts the measurement along horizontal axis by a normally distributed
         random variable with given mean and standard deviation.
         Use non-zero mean to approximate calibration error.
         Returns the applied shift.
@@ -352,33 +305,11 @@ class Spectrum:
         self.merge_confs()
         return N
 
-    @staticmethod
-    def sample_multinomial(reference, N, gain, sd):
-        """
-        Samples a spectrum of N molecules based on peak probabilities
-        from the reference spectrum. Simulates both isotope composition
-        and amplifier randomness.
-        The returned spectrum is not normalized.
-        N: int
-            number of ions in the spectrum
-        gain: float
-            The gain of the amplifier, i.e. average signal from one ion
-        sd: float
-            Standard deviation of one ion's signal
-        """
-        p = [x[1] for x in reference.confs]
-        assert np.isclose(sum(p), 1), 'Spectrum needs to be normalized prior to sampling'
-        U = rd.multinomial(N, p)
-        U = rd.normal(U*gain, np.sqrt(U*sd**2))
-        retSp = Spectrum('', empty=True, label='Sampled ' + reference.label)
-        retSp.set_confs([(x[0], max(u, 0.)) for x, u in zip(reference.confs, U)])
-        return retSp
-
     def find_peaks(self):
         """
         Returns a list of local maxima.
-        Each maximum is reported as a tuple of m/z and intensity.
-        The last and final configuration is never reported as a maximum.
+        Each maximum is reported as a tuple of location on the horizontal axis and intensity.
+        The first and the final configuration is never reported as a maximum.
         Note that this function should only be applied to profile spectra - the result
         does not make sense for centroided spectrum.
         Applying a gaussian or Savitzky-Golay filter prior to peak picking
@@ -396,7 +327,7 @@ class Spectrum:
         self.confs = [(mz, intsy if intsy >= 0 else 0.) for mz, intsy in self.confs]
 
     def centroid(self, max_width, peak_height_fraction=0.5):
-        """Return confs of a centroided spectrum.
+        """Return confs of a centroided spectrum (i.e. peak list).
 
         The function identifies local maxima of intensity and integrates peaks in the regions
         delimited by peak_height_fraction of the apex intensity.
@@ -406,18 +337,18 @@ class Spectrum:
         and may lead to false positives.
 
         Note that this function should only be applied to profile spectra - the result
-        does not make sense for centroided spectrum.
+        does not make sense for peak lists.
         Applying a gaussian or Savitzky-Golay filter prior to peak picking
         is advised in order to avoid detection of noise.
 
         Returns
         -----------------
-            A tuple of two peak lists that can be used to construct a new Spectrum object.
-            The first list contains configurations of centroids (i.e. centers of mass and areas of peaks).
+            A tuple of two lists that can be used to construct a new Spectrum object.
+            The first list contains configurations of centroids (i.e. locations and areas of peaks).
             The second list contains configurations of peak apices corresponding to the centroids
             (i.e. locations and heights of the local maxima of intensity.)
         """
-        ### TODO: change max_width to be in ppm?
+=
         # Validate the input:
         if any(intsy < 0 for mz, intsy in self.confs):
             warn("""
@@ -426,7 +357,7 @@ class Spectrum:
                  (unless you know what you're doing).
                  """)
 
-        # Transpose the confs list to get an array of masses and an array of intensities:
+        # Transpose the confs list to get an array of ppms and an array of intensities:
         mz, intsy = np.array(self.confs).T
 
         # Find the local maxima of intensity:
@@ -445,9 +376,9 @@ class Spectrum:
             target_intsy = peak_height_fraction*current_intsy
             right_shift = 1
             left_shift = 1
-            # Get the mz points bounding the peak fragment to integrate.
+            # Get the points bounding the peak fragment to integrate.
             # First, go to the right from the detected apex until one of the four conditions are met:
-            # 1. we exceed the mz range of the spectrum
+            # 1. we exceed the horizontal range of the spectrum
             # 2. we exceed the maximum distance from the apex given by max_dist
             # 3. the intensity exceeds the apex intensity (meaning that we've reached another peak)
             # 4. we go below the threshold intensity (the desired stopping condition)
@@ -457,7 +388,7 @@ class Spectrum:
             # then we will effectively consider the highest one as the true apex of the cluster and integrate the whole cluster only once.
             while p + right_shift < n-1 and mz[p+right_shift] - mz[p] < max_dist and intsy[p+right_shift] <= current_intsy and intsy[p+right_shift] > target_intsy:
                 right_shift += 1
-            # Get the mz values of points around left mz value of the peak boundary (which will be interpolated):
+            # Get the values of points around left value of the peak boundary (which will be interpolated):
             rx1, rx2 = mz[p+right_shift-1], mz[p+right_shift]
             ry1, ry2 = intsy[p+right_shift-1], intsy[p+right_shift]
             if not ry1 >= target_intsy >= ry2:
@@ -471,13 +402,13 @@ class Spectrum:
             if not ly1 <= target_intsy <= ly2:
                 # warn('Failed to find the left boundary of the peak at %f (probably found an overlapping peak)' % current_mz)
                 continue
-            # Interpolate the mz values actually corresponding to peak_height_fraction*current_intsy:
+            # Interpolate the ppm values actually corresponding to peak_height_fraction*current_intsy:
             lx = (target_intsy-ly1)*(lx2-lx1)/(ly2-ly1) + lx1
             if not lx1 <= lx <= lx2:
-                raise RuntimeError('Failed to interpolate the left boundary mz value of the peak at %f' % current_mz)
+                raise RuntimeError('Failed to interpolate the left boundary value of the peak at %f' % current_mz)
             rx = (target_intsy-ry1)*(rx2-rx1)/(ry2-ry1) + rx1
             if not rx1 <= rx <= rx2:
-                raise RuntimeError('Failed to interpolate the right boundary mz value of the peak at %f' % current_mz)
+                raise RuntimeError('Failed to interpolate the right boundary value of the peak at %f' % current_mz)
             # Join the interpolated boundary with the actual measurements:
             x = np.hstack((lx, mz[(p-left_shift+1):(p+right_shift)], rx))
             y = np.hstack((target_intsy, intsy[(p-left_shift+1):(p+right_shift)], target_intsy))
@@ -492,39 +423,39 @@ class Spectrum:
                 peak_intensity.append(current_intsy)
         return(list(zip(centroid_mz, centroid_intensity)), list(zip(peak_mz, peak_intensity)))
 
-    def resample(self, target_mz, mz_distance_threshold=0.05):
+    def resample(self, target_location, distance_threshold=0.05):
         """
         Returns a resampled spectrum with intensity values approximated
-        at points given by a sorted iterable target_mz.
+        at points given by a sorted iterable target_location.
         The approximation is performed by a piecewise linear interpolation
         of the spectrum intensities. The spectrum needs to be in profile mode
         in order for this procedure to work properly.
-        The spectrum is interpolated only if two target mz values closest to a
-        given target mz are closer than the specified threshold
+        The spectrum is interpolated only if two target values closest to a
+        given target_location are closer than the specified threshold
         This is done in order to interpolate the intensity only within peaks, not between them.
-        If the surrounding mz values are further away than the threshold,
-        it is assumed that the given target mz corresponds to the background and
+        If the surrounding values are further away than the threshold,
+        it is assumed that the given target_location corresponds to the background and
         there is no intensity at that point.
         A rule-of-thumb is to set threshold as twice the distance between
-        neighboring m/z measurements.
+        neighboring measurements along the horizontal axis.
         Large thresholds may lead to non-zero resampled intensity in the background,
         low thresholds might cause bad interpolation due to missing intensity values.
         """
         mz = [mz for mz, intsy in self.confs]
         intsy = [intsy for mz, intsy in self.confs]
-        x = target_mz[0]
-        for m in target_mz:
-            assert m >= x, "The target_mz list is not sorted!"
+        x = target_location[0]
+        for m in target_location:
+            assert m >= x, "The target_location list is not sorted!"
             x = m
-        lenx = len(target_mz)
+        lenx = len(target_location)
         lent = len(mz)
         qi = 0  # query (x) index
         ti = 0  # target index - the first index s.t. mz[ti] >= x[qi]
         y = [0.]*lenx  # resampled intensities
-        y0, y1 = intsy[0], intsy[0]  # intensities of target spectrum around the point target_mz[qi]
-        x0, x1 = mz[0], mz[0]  # mz around the point target_mz[qi]
+        y0, y1 = intsy[0], intsy[0]  # intensities of target spectrum around the point target_location[qi]
+        x0, x1 = mz[0], mz[0]  # mz around the point target_location[qi]
         # before mz starts, the intensity is zero:
-        while target_mz[qi] < mz[0]:
+        while target_location[qi] < mz[0]:
             qi += 1
         # interpolating:
         while ti < lent-1:
@@ -533,69 +464,46 @@ class Spectrum:
             y1 = intsy[ti]
             x0 = x1
             x1 = mz[ti]
-            while qi < lenx and target_mz[qi] <= mz[ti]:
+            while qi < lenx and target_location[qi] <= mz[ti]:
                 # note: maybe in this case set one of the values to zero to get a better interpolation of edges
-                if x1-x0 < mz_distance_threshold:
-                    y[qi] = y1 + (target_mz[qi]-x1)*(y0-y1)/(x0-x1)
+                if x1-x0 < distance_threshold:
+                    y[qi] = y1 + (target_location[qi]-x1)*(y0-y1)/(x0-x1)
                 qi += 1
-        return self.__class__(confs = list(zip(target_mz, y)))
+        return self.__class__(confs = list(zip(target_location, y)))
 
 
-    def fuzzify_peaks(self, sd, step):
+    def gaussian_smoothing(self, sd=0.01, new_axis=0.01):
         """
-        LEGACY FUNCTION. USE SELF.GAUSSIAN_SMOOTING INSTEAD.   
-        Applies a gaussian filter to the peaks, effectively broadening them
-        and simulating low resolution. Works in place, modifying self.
-        The parameter step gives the distance between samples in m/z axis.
-        After the filtering, the area below curve (not the sum of intensities!)
-        is equal to the sum of the input peak intensities.
-        """
-        new_mass = np.arange(self.confs[0][0] - 4*sd, self.confs[-1][0] + 4*sd, step)
-        A = new_mass[:,np.newaxis] - np.array([m for m,i in self.confs])
-        # we don't need to evaluate gaussians to far from their mean,
-        # from our perspective 4 standard deviations from the mean is the same
-        # as the infinity; this allows to avoid overflow as well:
-        A[np.abs(A) > 4*sd] = np.inf
-        A **= 2
-        A /= (-2*sd**2)
-        A = np.exp(A)
-        new_intensity = A @ np.array([i for m,i in self.confs])  # matrix multiplication
-        new_intensity /= (np.sqrt(2*np.pi)*sd)
-        self.set_confs(list(zip(new_mass, new_intensity)))
-
-
-    def gaussian_smoothing(self, sd=0.01, new_mz=0.01):
-        """
-        Applies a gaussian filter to the mass spectrum in order to smooth
+        Applies a gaussian filter to the spectrum in order to smooth
         it out and decrease the electronic noise.
         Technically, each intensity measurement is replaced by a Gaussian weighted average
         of the neighbouring intensities.  
         As a consequence, the resolution gets decreased.
         Parameter sd (float) controls the width of the gaussian filter.
-        Parameter new_mz (float or np.array) is the mass axis of the resulting smoothed spectrum.
-        Setting it to float generates an equally spaced mass axis with new_mz being the step length.
-        Setting it to np.array sets it as the resulting mass axis.  
+        Parameter new_axis (float or np.array) is the horizontal axis of the resulting smoothed spectrum.
+        Setting it to float generates an equally spaced horizontal axis with new_axis being the step length.
+        Setting it to np.array sets it as the resulting horizontal axis.  
         Note that after filtering, the area below curve (not the sum of intensities!)
         is equal to the area of the original spectrum in profile mode,
         or the sum of the input peak intensities in centroid mode.
         """
-        if isinstance(new_mz, float):
-            new_mz = np.arange(self.confs[0][0] - 4*sd, self.confs[-1][0] + 4*sd, new_mz)
-        assert np.all(new_mz[1:] >= new_mz[:-1]), 'The new mz axis needs to be sorted!'
-        smooth_intensity = np.zeros(new_mz.shape)
+        if isinstance(new_axis, float):
+            new_axis = np.arange(self.confs[0][0] - 4*sd, self.confs[-1][0] + 4*sd, new_axis)
+        assert np.all(new_axis[1:] >= new_axis[:-1]), 'The new axis needs to be sorted!'
+        smooth_intensity = np.zeros(new_axis.shape)
         for mz, intsy in self.confs:
-            # smooth_intensity += intsy*np.exp(-(mz - new_mz)**2)**(1/(2*sd**2))
-            lpid, rpid = np.searchsorted(new_mz, (mz - 4*sd, mz + 4*sd))
-            peak_mz = new_mz[lpid:rpid]
+            # smooth_intensity += intsy*np.exp(-(mz - new_axis)**2)**(1/(2*sd**2))
+            lpid, rpid = np.searchsorted(new_axis, (mz - 4*sd, mz + 4*sd))
+            peak_mz = new_axis[lpid:rpid]
             smooth_intensity[lpid:rpid] += intsy*np.exp(-(mz - peak_mz)**2)**(1/(2*sd**2))
         smooth_intensity /= np.sqrt(2*np.pi)*sd
-        self.set_confs(list(zip(new_mz, smooth_intensity)))
+        self.set_confs(list(zip(new_axis, smooth_intensity)))
 
 
     def cut_smallest_peaks(self, removed_proportion=0.001):
         """
         Removes smallest peaks until the total removed intensity amounts
-        to the given proportion of the total ion current in the spectrum.
+        to the given proportion of the total intensity in the spectrum.
         """
         self.confs.sort(key = lambda x: x[1], reverse=True)
         threshold  = removed_proportion*sum(x[1] for x in self.confs)
@@ -606,8 +514,8 @@ class Spectrum:
 
     def filter_peaks(self, list_of_others, margin):
         """
-        Removes peaks which do not match any isotopic envelope from
-        the list_of_others, with a given mass margin for matching.
+        Removes peaks which do not match any peaks from
+        the list_of_others, with a given margin for matching.
         Works in situ (modifies self).
         Assumes that list_of_others contains proper Spectrum objects
         (i.e. with default sorting of confs).
@@ -616,7 +524,7 @@ class Spectrum:
             list_of_others: list
                 A list of Spectrum objects.
             margin: float
-                The isotopic envelopes of target spectra are widened by this margin.
+                The peaks of target spectra are widened by this margin.
         _____
         Returns: None
         """
@@ -633,7 +541,7 @@ class Spectrum:
         """
         Remove signal from the spectrum which is far from other spectra signal.
 
-        This method removes peaks from self spectrum which m/z is outside the
+        This method removes peaks whose location is outside the
         area of any peak of other spectra +/- margin. The method does not
         modify self spectrum and returns a new instance of the filtered
         spectrum.
@@ -646,12 +554,12 @@ class Spectrum:
             One instance of the spectrum against self is filtered or iterable of
             instances of other spectra.
         margin
-            m/z radius within signal should be left.
+            horizontal radius within signal that should be left.
 
         Returns
         -------
         Spectrum
-            A new spectrum with filtered out peaks.
+            A new spectrum with filtered peaks.
 
         """
         try:
