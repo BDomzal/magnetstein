@@ -1,4 +1,4 @@
-from magnetstein import BaseSpectrum
+from .base_spectrum import *
 
 
 class NMRSpectrum(BaseSpectrum):
