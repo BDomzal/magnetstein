@@ -414,7 +414,7 @@ class BaseSpectrum:
 
         Returns
         -------
-        Spectrum
+        (Base)Spectrum
             A new spectrum with filtered peaks.
 
         """
