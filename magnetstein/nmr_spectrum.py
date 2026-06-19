@@ -163,7 +163,7 @@ class NMRSpectrum(BaseSpectrum):
         smooth_intensity /= np.sqrt(2*np.pi)*sd
         self.set_confs(list(zip(new_axis, smooth_intensity)))
 
-   def plot(self, show = True, profile=True, linewidth=1, **plot_kwargs):
+    def plot(self, show = True, profile=True, linewidth=1, **plot_kwargs):
         """
         Plots the spectrum.
         The keyword argument show is retained for backwards compatibility.
