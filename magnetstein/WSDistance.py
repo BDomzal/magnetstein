@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-from magnetstein import Spectrum
+from magnetstein import BaseSpectrum
 from getopt import getopt
 from functools import reduce
 import numpy as np
@@ -102,10 +102,10 @@ def main():
         to_remove2 = set([o[0] for o, c in zip(order2, cmsm2) if c < 1-thr])
         sp2 = [l for i, l in enumerate(sp2) if i not in to_remove2]
 
-    Spectrum1 = Spectrum("", empty=True)
+    Spectrum1 = BaseSpectrum(confs=[], empty=True)
     Spectrum1.set_confs(sp1)
     Spectrum1.normalize()
-    Spectrum2 = Spectrum("", empty=True)
+    Spectrum2 = BaseSpectrum(confs=[], empty=True)
     Spectrum2.set_confs(sp2)
     Spectrum2.normalize()
 
