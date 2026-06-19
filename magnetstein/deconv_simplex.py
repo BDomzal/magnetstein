@@ -818,7 +818,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     filtered = []
     for i in progr_bar(range(k), desc = "Initial filtering of formulas"):
         s = preprocessed_query[i]
-        mode = s.get_modal_peak()[0]
+        mode = s.get_highest_peak()[0]
         mn = s.confs[0][0]
         mx = s.confs[-1][0]
         matching_current = MDC==0. or sum(x[1] for x in misc.extract_range(
