@@ -84,11 +84,10 @@ in the commandline. Then, install the package by running the `setup.py` file:
 python3 setup.py install --user
 ```
 
-This will install the `masserstein` package for the current user (including NMR spectroscopy tool Magnetstein).  
+This will install the `magnetstein` package for the current user.
 
 You will also need to have the following packages installed (all available via pip):
 
-* `IsoSpecPy`
 * `numpy`
 * `scipy`
 * `PuLP`

@@ -1,12 +1,10 @@
 import numpy as np
 from time import time
-from masserstein import Spectrum
-from masserstein import NMRSpectrum
+from magnetstein import BaseSpectrum, NMRSpectrum, misc
 import pulp as lp
 from warnings import warn
 from tqdm import tqdm
 from pulp.apis import LpSolverDefault
-from masserstein import misc
 import math
 from copy import deepcopy
 
@@ -42,9 +40,9 @@ def dualdeconv2(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolverDefault,
         remove noise from the mixture's spectrum, as described by Ciach et al., 2020. 
         _____
         Parameters:
-            exp_sp: Spectrum object
+            exp_sp: NMRSpectrum (or BaseSpectrum) object
                 Mixture's spectrum.
-            thr_sp: list of Spectrum objects
+            thr_sp: list of NMRSpectrum (or BaseSpectrum) objects
                 List of components (i.e. reference, query, theoretical) spectra.
             penalty: float
                 Denoising penalty, a.k.a. kappa, kappa_mixture.
@@ -183,9 +181,9 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         remove noise from the mixture's spectrum, as described by Ciach et al., 2020. 
         _____
         Parameters:
-            exp_sp: Spectrum object
+            exp_sp: NMRSpectrum (or BaseSpectrum) object
                 Mixture's spectrum.
-            thr_sp: list of Spectrum objects
+            thr_sp: list of NMRSpectrum (or BaseSpectrum) objects
                 List of components' (i.e. reference, query, theoretical) spectra.
             penalty: float
                 Denoising penalty, a.k.a. kappa, kappa_mixture.
@@ -218,9 +216,9 @@ def dualdeconv2_alternative(exp_sp, thr_sps, penalty, quiet=True, solver=LpSolve
         thr_confs = [thr_sp.confs.copy() for thr_sp in thr_sps]
 
         # Normalization check:
-        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized."
+        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum is not normalized."
         for i, thrcnf in enumerate(thr_confs):
-                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized." % i
+                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i is not normalized." % i
 
         # Computing a common horizontal axis for all spectra
         exp_confs = [(m, i) for m, i in exp_confs]
@@ -326,9 +324,9 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         and both give the same results up to roundoff errors.
         _____
         Parameters:
-            exp_sp: Spectrum object
+            exp_sp: NMRSpectrum (or BaseSpectrum) object
                 Mixture's spectrum.
-            thr_sp: Spectrum object
+            thr_sp: list of NMRSpectrum (or BaseSpectrum) objects
                 List of components' (a.k.a. reference, query, theoretical, library) spectra.
             penalty: float
                 Denoising penalty for the mixture's spectrum, a.k.a. kappa_mixture.
@@ -367,9 +365,9 @@ def dualdeconv3(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         thr_confs = [thr_sp.confs.copy() for thr_sp in thr_sps]
 
         # Normalization check:
-        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized."
+        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum is not normalized."
         for i, thrcnf in enumerate(thr_confs):
-                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized." % i
+                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i is not normalized." % i
 
         # Computing a common horizontal axis for all spectra
         exp_confs = [(m, i) for m, i in exp_confs]
@@ -497,9 +495,9 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         implemented in dualdeconv3 and both give the same results up to roundoff errors.
         _____
         Parameters:
-            exp_sp: Spectrum object
+            exp_sp: NMRSpectrum (or BaseSpectrum) object
                 Mixture's spectrum.
-            thr_sp: Spectrum object
+            thr_sp: list of NMRSpectrum (or BaseSpectrum) objects
                 List of components' (a.k.a. reference, query, theoretical, library) spectra.
             penalty: float
                 Denoising penalty for the mixture's spectrum, a.k.a. kappa_mixture.
@@ -538,9 +536,9 @@ def dualdeconv4(exp_sp, thr_sps, penalty, penalty_th, quiet=True, solver=LpSolve
         thr_confs = [thr_sp.confs.copy() for thr_sp in thr_sps]
 
         # Normalization check:
-        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum not normalized."
+        assert np.isclose(sum(x[1] for x in exp_confs) , 1), "Mixture's spectrum is not normalized."
         for i, thrcnf in enumerate(thr_confs):
-                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i not normalized." % i
+                assert np.isclose(sum(x[1] for x in thrcnf), 1), "Component's spectrum %i is not normalized." % i
 
         # Computing a common horizontal axis for all spectra
         exp_confs = [(m, i) for m, i in exp_confs]
@@ -663,9 +661,9 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     Performs initial filtering of components' and mixture's spectra to speed up the computations.
     _____
     Parameters:
-    spectrum: Spectrum object
+    spectrum: NMRSpectrum (or BaseSpectrum) object
         The mixture's spectrum.
-    query: list of Spectrum objects
+    query: list of NMRSpectrum (or BaseSpectrum) objects
         A list of components' spectra (a.k.a. reference spectra, library).
     MTD: Maximum Transport Distance, a.k.a. kappa_mixture, float
         Signal from mixture's spectrum will be transported up to this distance when estimating
@@ -750,7 +748,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     try:
         exp_confs = spectrum.confs
     except:
-        print("Could not retrieve the confs list. Is the supplied spectrum an object of class Spectrum?")
+        print("Could not retrieve the confs list. Is the supplied spectrum an object of class NMRSpectrum/BaseSpectrum?")
         raise
 
     
@@ -758,7 +756,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
 
     if what_to_compare=='concentration':
         for i, sp in enumerate(query):
-                assert sp.protons is not None, "Component " + str(i) +" doesn't have the number of protons defined. Please define sp.protons attribute."
+                assert sp.protons is not None, "Component " + str(i) +" doesn't have the number of NMR-active nuclei defined. Please define it by setting 'protons' attribute."
 
     is_NMR_spectrum = [isinstance(sp, NMRSpectrum) for sp in [spectrum] + query]
     assert all(is_NMR_spectrum) or not any(is_NMR_spectrum), 'Spectra provided are of mixed types. \
@@ -766,7 +764,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     nmr = all(is_NMR_spectrum)
 
     if not nmr:
-        assert all(x[0] >= 0. for x in exp_confs), 'Found peaks with negative masses!'
+        assert all(x[0] >= 0. for x in exp_confs), 'Found peaks with negative positions on the horizontal axis!'
 
     if any(x[1] < 0 for x in exp_confs):
         print("The mixture's spectrum cannot contain negative intensities. ")
@@ -808,8 +806,8 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
         assert abs(sum(x[1] for x in q_confs) - 1.) < 1e-08, "Numerical error occured during normalization. Component's spectrum is not normalized."
 
         if not nmr:
-            assert all(x[0] >= 0 for x in q.confs), "Component's spectrum %i has negative masses!" %i
-            preprocessed_query.append(Spectrum(confs=q_confs))
+            assert all(x[0] >= 0 for x in q.confs), "Component's spectrum %i has negative positions on the horizontal axis!" %i
+            preprocessed_query.append(BaseSpectrum(confs=q_confs))
         else:
             preprocessed_query.append(NMRSpectrum(confs=q_confs, protons=query[i].protons))
         
@@ -818,7 +816,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     filtered = []
     for i in progr_bar(range(k), desc = "Initial filtering of formulas"):
         s = preprocessed_query[i]
-        mode = s.get_modal_peak()[0]
+        mode = s.get_highest_peak()[0]
         mn = s.confs[0][0]
         mx = s.confs[-1][0]
         matching_current = MDC==0. or sum(x[1] for x in misc.extract_range(
@@ -833,8 +831,9 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
 
     envelope_bounds.sort(key=lambda x: x[0])  # sorting by lower bounds
     if verbose:
-        print("Removed components' spectra due to no matching peaks in mixture's spectrum:", filtered)
-        print('Envelope bounds:', envelope_bounds)
+        if filtered:
+            print("Removed components' spectra due to no matching peaks in mixture's spectrum:", filtered)
+        print('Bounds:', envelope_bounds)
 
     # Computing chunks
     chunkIDs = [0]*k  # Grouping of components' spectra
@@ -886,7 +885,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
     exp_conf_chunks.append(matching_confs)
     chunk_TICs = [sum(exp_confs[i][1] for i in chunk_list) for chunk_list in exp_conf_chunks]
     if verbose:
-        print("Ion currents in chunks:", chunk_TICs)
+        print("Total masses in chunks:", chunk_TICs)
 
     # Deconvolving chunks:
     p0_prime = 0
@@ -912,7 +911,7 @@ def estimate_proportions(spectrum, query, MTD=0.25, MDC=1e-8,
                 #later this list will be attached to vortex
                 exp_confs_in_almost_empty_chunks.append(exp_confs[i])
         else:
-            chunkSp = Spectrum('', empty=True)
+            chunkSp = BaseSpectrum('', empty=True)
             # Note: conf_IDs are monotonic w.r.t. conf mass,
             # so constructing a spectrum will not change the order
             # of confs supplied in the list below:
@@ -1037,11 +1036,11 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
     Uses estimation from previous time point to speed up the computations.
     _____
     Parameters:
-    mixture_in_time: list of Spectrum objects or np.ndarray
-        The mixture's spectrum in consecutive time points. If list of Spectrum objects, then the earliest spectrum should be 
+    mixture_in_time: list of NMRSpectrum (or BaseSpectrum) objects or np.ndarray
+        The mixture's spectrum in consecutive time points. If list of NMRSpectrum (or BaseSpectrum) objects, then the earliest spectrum should be 
         an element 0 of the list. If np.ndarray, then column 0 of the array should contain chemical shift values, and the 
         other columns should contain intensities (those corresponding to the earliest spectrum should be in column 1).
-    reagents_spectra: list of Spectrum objects
+    reagents_spectra: list of NMRSpectrum (or BaseSpectrum) objects
         A list of reagents' spectra (both substrates and products) present in the mixture.
     MTD: Maximum Transport Distance for reaction mixture, a.k.a. kappa_mixture, float
         This value can be interpreted as the tolerance threshold for peaks' shift in mixture's spectrum,
@@ -1140,12 +1139,12 @@ def estimate_proportions_in_time(mixture_in_time, reagents_spectra, MTD=0.5, MDC
         if nmr:
             mixture_in_time_list = [NMRSpectrum(confs=conf) for conf in mixtures_confs_list]
         else:
-            mixture_in_time_list = [Spectrum(confs=conf) for conf in mixtures_confs_list]
+            mixture_in_time_list = [BaseSpectrum(confs=conf) for conf in mixtures_confs_list]
 
 
     else:
         print('Cannot retrieve spectra of mixtures from mixture_in_time.\
-                \n Make sure that provided object is either a list of (NMR)Spectrum objects or numpy.ndarray.')
+                \n Make sure that provided object is either a list of NMRSpectrum/BaseSpectrum objects or numpy.ndarray.')
         return
 
 

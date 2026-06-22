@@ -1,5 +1,5 @@
-from .spectrum import *
+from .base_spectrum import *
 from .nmr_spectrum import *
 from .deconv_simplex import *
 
-__version__ = '1.0.0'
+__version__ = '2.0.0'
