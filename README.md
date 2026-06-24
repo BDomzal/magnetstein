@@ -1,6 +1,6 @@
 # <img src="https://github.com/user-attachments/assets/008fa262-7fa1-458c-a8fc-f4f6e3a2022a" align="left" style="width:6%; height:auto;"/>Magnetstein: NMR spectra analysis tool
 
-<img width="2500" height="1875" alt="main_workflow_final_white_background" src="https://github.com/user-attachments/assets/b1ced18b-727c-4676-8e82-bfffe9dc4f34" />
+<img width="2500" alt="main_workflow_final_white_background" src="https://github.com/user-attachments/assets/b1ced18b-727c-4676-8e82-bfffe9dc4f34" />
 
 This repository contains software tools which allow to compare nuclear magnetic resonance (NMR) spectra and solve quantification task, i.e. estimate amounts of components in a mixture using the Wasserstein distance. Find out more [here.](https://doi.org/10.1021/acs.analchem.3c03594)
 
@@ -12,7 +12,7 @@ If you encounter any difficulties during installation or usage of these programs
 
 # About the method
 
-<img width="2700" height="1200" alt="all_components_variant_2" src="https://github.com/user-attachments/assets/95d4215e-3eca-441f-a5a7-e99e720122f5" />
+<img width="2700" alt="all_components_variant_2" src="https://github.com/user-attachments/assets/95d4215e-3eca-441f-a5a7-e99e720122f5" />
 
 ### When to use Magnetstein
 
@@ -58,7 +58,7 @@ In order to make the results reproducible, one needs to provide: 1) input data (
 
 If you don't have programming experience, instead of this Python package you can use our [**web application**.](https://bioputer.mimuw.edu.pl/magnetstein) You can read more about it [here](https://doi.org/10.1016/j.softx.2025.102329).
 
-<img width="1690" height="640" alt="main_page" src="https://github.com/user-attachments/assets/e9214a07-06fd-422a-8355-851a4b889f2a" />
+<img width="1690" alt="main_page" src="https://github.com/user-attachments/assets/e9214a07-06fd-422a-8355-851a4b889f2a" />
 
 If you prefer to use the Python package, proceed to Installation section.
 
@@ -110,7 +110,7 @@ See `estimation.ipynb` in folder `examples/` to find out how to estimate amounts
 
 Magnetstein enables also the analysis of multiple mixtures, for example obtained from reaction monitoring. This utility is available via function `estimate_proportions_in_time`. To see examples, visit this [repository](https://github.com/BDomzal/magnetstein_x_chemical_reactions). Read more about it [here](https://doi.org/10.1021/acs.analchem.5c00800).
 
-<img width="4000" height="2250" alt="main_figure" src="https://github.com/user-attachments/assets/5cd633c7-fe30-40e1-9408-a9cd33734bc1" />
+<img width="4000" alt="main_figure" src="https://github.com/user-attachments/assets/5cd633c7-fe30-40e1-9408-a9cd33734bc1" />
 
 # Visualisations
 
