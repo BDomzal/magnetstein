@@ -20,8 +20,8 @@ from io import open
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-#with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-#    long_description = f.read()
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
@@ -61,7 +61,7 @@ setup(
     #
     # This field corresponds to the "Description" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#description-optional
-    #long_description=long_description,  # Optional
+    long_description=long_description,  # Optional
 
     # Denotes that our long_description is in Markdown; valid values are
     # text/plain, text/x-rst, and text/markdown
@@ -73,21 +73,21 @@ setup(
     #
     # This field corresponds to the "Description-Content-Type" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#description-content-type-optional
-    #long_description_content_type='text/markdown',  # Optional (see note above)
+    long_description_content_type='text/markdown',  # Optional (see note above)
 
     # This should be a valid link to your project's main homepage.
     #
     # This field corresponds to the "Home-Page" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#home-page-optional
-    #url='https://github.com/pypa/sampleproject',  # Optional
+    url='https://github.com/BDomzal/magnetstein',  # Optional
 
     # This should be your name or the name of the organization which owns the
     # project.
-    #author='The Python Packaging Authority',  # Optional
+    author='Michał Ciach, Michał Startek, Grzegorz Skoraczyński, Barbara Domżał, Maciej Bartczak, Zofia Kozaryna, Kornel Natoński',  # Optional
 
     # This should be a valid email address corresponding to the author listed
     # above.
-    #author_email='pypa-dev@googlegroups.com',  # Optional
+    author_email='b.domzal@mimuw.edu.pl',  # Optional
 
     # Classifiers help users find your project by categorizing it.
     #
@@ -107,17 +107,14 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         # These classifiers are *not* checked by 'pip install'. See instead
         # 'python_requires' below.
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
+        'Programming Language :: Python :: 3.15',
 
         'License :: OSI Approved :: MIT License',
     ],
@@ -145,7 +142,7 @@ setup(
     # and refuse to install the project if the version does not match. If you
     # do not support Python 2, you can simplify this to '>=3.5' or similar, see
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-    python_requires='>2.7, >=3.6, <4',
+    python_requires='>=3.9, <4',
 
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is
@@ -197,13 +194,6 @@ setup(
     #    ],
     #},
 
-    entry_points = {
-        'console_scripts': [
-            'WSDistance=magnetstein.WSDistance:main',
-            'WSDeconv=magnetstein.WSDeconv:main'
-            ]
-    }
-
     # List additional URLs that are relevant to your project as a dict.
     #
     # This field corresponds to the "Project-URL" metadata fields:
@@ -213,10 +203,9 @@ setup(
     # issues, where the source is hosted, where to say thanks to the package
     # maintainers, and where to support the project financially. The key is
     # what's used to render the link text on PyPI.
-    #project_urls={  # Optional
-    #    'Bug Reports': 'https://github.com/pypa/sampleproject/issues',
-    #    'Funding': 'https://donate.pypi.org',
-    #    'Say Thanks!': 'http://saythanks.io/to/example',
-    #    'Source': 'https://github.com/pypa/sampleproject/',
-    #},
+    project_urls={  # Optional
+        'Source': 'https://github.com/BDomzal/magnetstein',
+        'Bug Reports': 'https://github.com/BDomzal/magnetstein/issues',
+        'Paper': 'https://doi.org/10.1021/acs.analchem.3c03594',
+    },
 )
