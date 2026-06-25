@@ -64,9 +64,19 @@ If you prefer to use the Python package, proceed to Installation section.
 
 # Installation
 
-To be able to use the software provided in this repository, you will need to have a working Python3 distribution installed on your computer.  
+To be able to use the software provided in this repository, you will need to have a working Python3 distribution installed on your computer.
 
-To use Magnetstein, clone this repository. In the commandline, this can be done by typing:
+## Installation via PyPI
+
+Magnetstein is available [on PyPI](https://pypi.org/project/magnetstein/). To install it from the commandline, type:
+
+```
+pip install magnetstein
+```
+
+## Installation from Github repository
+
+Alternatively, you can clone this repository. In the commandline, this can be done by typing:
 
 ```
 git clone https://github.com/BDomzal/magnetstein.git
