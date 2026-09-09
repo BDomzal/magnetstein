@@ -6,8 +6,6 @@ This repository contains software tools which allow to compare nuclear magnetic 
 
 Magnetstein is a modification of the algorithm from a Python3 package dedicated for mass spectrometry, called `masserstein` (available [here](https://github.com/mciach/masserstein)). 
 
-You can read a popular science article (Polish only) about Magnetstein [here](https://serwisnaukowy.uw.edu.pl/informatyka-na-pomoc-biologii-algorytm-z-uw-rozszyfrowuje-leki-i-sklad-ludzkiego-ciala/).
-
 If you encounter any difficulties during installation or usage of these programs, or if you have any suggestions regarding their functionality, please post a GitHub issue or send an email to b.domzal@mimuw.edu.pl. 
 
 # About the method
@@ -125,6 +123,12 @@ Magnetstein enables also the analysis of multiple mixtures, for example obtained
 # Visualisations
 
 See `visualization_package/visualization_examples.ipynb`.
+
+# Useful links
+
+[AtomisticSkills: AI agents for materials research that use Magnetstein for NMR analysis](https://github.com/learningmatter-mit/AtomisticSkills/tree/8e4cf8f7385c70716c6e7155daf3e5a5fbcc7490)
+
+[Popular introduction to Magnetstein (Polish only)](https://serwisnaukowy.uw.edu.pl/informatyka-na-pomoc-biologii-algorytm-z-uw-rozszyfrowuje-leki-i-sklad-ludzkiego-ciala/)
 
 # Acknowledgements
 
